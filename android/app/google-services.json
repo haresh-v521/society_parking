@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "372126564712",
+    "project_id": "society-parking",
+    "storage_bucket": "society-parking.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:372126564712:android:60d3c7f6f4465e33ea96dd",
+        "android_client_info": {
+          "package_name": "com.example.society_parking"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "372126564712-84gl42hgdeqerfn4935c2h9p1539d802.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.society_parking",
+            "certificate_hash": "fa0f355a27cd9fc89a1b5d8bb36ef08fce3a381b"
+          }
+        },
+        {
+          "client_id": "372126564712-gkce4kl3dpnakd3v48t68muq849ieqmc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA85Gve9KuZEVREAu19u9MXA4AMC7-Y2mI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "372126564712-gkce4kl3dpnakd3v48t68muq849ieqmc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
