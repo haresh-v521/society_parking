@@ -7,6 +7,10 @@ import 'home/home_screen.dart';
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   runApp(MaterialApp(
+   routes: {
+    'home': (context) => const HomeScreen(),
+   },
+   debugShowCheckedModeBanner: false,
     home: HomeScreen(),
   ));
 }

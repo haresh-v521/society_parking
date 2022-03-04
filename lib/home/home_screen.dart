@@ -1,8 +1,10 @@
 import 'dart:core';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../user_controller/user_controller.dart';
+import 'detail.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -29,12 +31,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   TextEditingController textEditingController = TextEditingController();
 
-  GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  GlobalKey<FormState> addFormKey = GlobalKey<FormState>();
+  GlobalKey<FormState> editFormKey = GlobalKey<FormState>();
 
   List<UserData> userAllData = [];
   List<UserData> foundData = [];
 
-  bool isVisible = false;
+  bool isabike = false;
+  bool isaCar = false;
+  bool isEcar = false;
+  bool isEbike = false;
 
   @override
   void initState() {
@@ -49,6 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
       userAllData = result;
       foundData.addAll(userAllData);
     });
+    foundData.sort((a, b) => a.flatNo!.compareTo(b.flatNo!));
   }
 
   void runFilter(String enterVal) {
@@ -81,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
             IconButton(
               icon: Icon(Icons.add),
               onPressed: () {
-                _showDialog(context);
+                _addData(context);
               },
             ),
           ],
@@ -110,7 +117,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     onChanged: (String val) => runFilter(val),
                   ),
-                  Divider(thickness: 2),
+                  Divider(
+                    thickness: 2,
+                  ),
                   Expanded(
                       child: SingleChildScrollView(
                     child: Container(
@@ -121,487 +130,45 @@ class _HomeScreenState extends State<HomeScreen> {
                           itemBuilder: (context, index) {
                             return Card(
                               child: ExpansionTile(
-                                backgroundColor: Colors.black12,
-                                leading: CircleAvatar(
-                                  radius: 20,
-                                  backgroundImage:
-                                      AssetImage("asset/images/profile.png"),
-                                ),
-                                title: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                leading: Stack(
                                   children: [
-                                    Text(
-                                      foundData[index].ownerName ?? '',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold),
+                                    CircleAvatar(
+                                      radius: 30,
+                                      backgroundImage: AssetImage(
+                                          "asset/images/profile.png"),
                                     ),
-                                    IconButton(
-                                      color: Colors.blue,
-                                      icon: Icon(Icons.edit),
-                                      onPressed: () {
-                                        editFlatNoController.text =
-                                            foundData[index].flatNo!;
-                                        editOwnerController.text =
-                                            foundData[index].ownerName!;
-                                        editContactController.text =
-                                            foundData[index].contactNo!;
-                                        showDialog(
-                                            context: context,
-                                            builder: (
-                                              _,
-                                            ) {
-                                              return StatefulBuilder(builder:
-                                                  (_, StateSetter setState) {
-                                                return AlertDialog(
-                                                  title:
-                                                      const Text("Edit Detail"),
-                                                  content:
-                                                      SingleChildScrollView(
-                                                    child: Form(
-                                                      autovalidateMode:
-                                                          AutovalidateMode
-                                                              .onUserInteraction,
-                                                      child: Column(
-                                                        //mainAxisSize: MainAxisSize.min,
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .spaceAround,
-                                                        children: [
-                                                          TextFormField(
-                                                            controller:
-                                                                editFlatNoController,
-                                                            decoration:
-                                                                InputDecoration(
-                                                              border:
-                                                                  OutlineInputBorder(),
-                                                              hintText:
-                                                                  "Flat NO",
-                                                              prefixIcon: Icon(
-                                                                Icons.home,
-                                                                color:
-                                                                    Colors.cyan,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          SizedBox(
-                                                            height: 5,
-                                                          ),
-                                                          TextFormField(
-                                                            controller:
-                                                                editOwnerController,
-                                                            decoration:
-                                                                InputDecoration(
-                                                              border:
-                                                                  OutlineInputBorder(),
-                                                              hintText:
-                                                                  "Owner Name",
-                                                              prefixIcon: Icon(
-                                                                Icons.home,
-                                                                color:
-                                                                    Colors.cyan,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          SizedBox(
-                                                            height: 5,
-                                                          ),
-                                                          TextFormField(
-                                                            controller:
-                                                                editContactController,
-                                                            decoration:
-                                                                InputDecoration(
-                                                              border:
-                                                                  OutlineInputBorder(),
-                                                              hintText:
-                                                                  "Contact NO",
-                                                              prefixIcon: Icon(
-                                                                Icons.call,
-                                                                color:
-                                                                    Colors.cyan,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          SizedBox(
-                                                            height: 5,
-                                                          ),
-                                                          TextFormField(
-                                                            controller:
-                                                                editCarController,
-                                                            decoration: InputDecoration(
-                                                                border: OutlineInputBorder(),
-                                                                hintText: "GJ05AB1234",
-                                                                prefixIcon: Icon(
-                                                                  Icons
-                                                                      .directions_car,
-                                                                  color: Colors
-                                                                      .cyan,
-                                                                ),
-                                                                suffixIcon: isVisible
-                                                                    ? IconButton(
-                                                                        icon: Icon(
-                                                                            Icons.add),
-                                                                        onPressed:
-                                                                            () {
-                                                                          setState(
-                                                                              () {
-                                                                            foundData[index].car!.add(editCarController.text.toUpperCase());
-                                                                            editCarController.clear();
-                                                                          });
-                                                                        },
-                                                                      )
-                                                                    : IconButton(
-                                                                        icon:
-                                                                            Icon(
-                                                                          Icons
-                                                                              .clear,
-                                                                          color:
-                                                                              Colors.red,
-                                                                        ),
-                                                                        onPressed:
-                                                                            () {
-                                                                          editCarController
-                                                                              .clear();
-                                                                        },
-                                                                      )),
-                                                            onChanged: (val) {
-                                                              Pattern pattern =
-                                                                  r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
-
-                                                              RegExp regex =
-                                                                  RegExp(pattern
-                                                                      .toString());
-                                                              setState(() {
-                                                                (regex.hasMatch(
-                                                                        val))
-                                                                    ? isVisible =
-                                                                        true
-                                                                    : isVisible =
-                                                                        false;
-                                                              });
-                                                            },
-                                                            validator: (val) {
-                                                              Pattern pattern =
-                                                                  r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
-
-                                                              RegExp regex =
-                                                                  RegExp(pattern
-                                                                      .toString());
-                                                              if ((!regex.hasMatch(
-                                                                      val!)) &&
-                                                                  val.isNotEmpty) {
-                                                                return "Enter Valid Number ";
-                                                              }
-                                                            },
-                                                          ),
-                                                          SizedBox(
-                                                            height: 5,
-                                                          ),
-                                                          Container(
-                                                            decoration: BoxDecoration(
-                                                                color: Colors
-                                                                    .black12,
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            10)),
-                                                            height: 80,
-                                                            width:
-                                                                MediaQuery.of(
-                                                                        context)
-                                                                    .size
-                                                                    .width,
-                                                            child: Padding(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .all(8.0),
-                                                              child:
-                                                                  SingleChildScrollView(
-                                                                scrollDirection:
-                                                                    Axis.vertical,
-                                                                child: Center(
-                                                                  child: Wrap(
-                                                                    runSpacing:
-                                                                        10,
-                                                                    spacing: 10,
-                                                                    direction: Axis
-                                                                        .horizontal,
-                                                                    children: foundData[
-                                                                            index]
-                                                                        .car!
-                                                                        .map((e) => Container(
-                                                                            height: 25,
-                                                                            width: 100,
-                                                                            decoration: BoxDecoration(border: Border.all(color: Colors.black), borderRadius: BorderRadius.circular(20)),
-                                                                            child: Center(
-                                                                                child: Row(
-                                                                              mainAxisAlignment: MainAxisAlignment.center,
-                                                                              children: [
-                                                                                Text(
-                                                                                  e.toString(),
-                                                                                  style: TextStyle(color: Colors.black, fontSize: 12),
-                                                                                ),
-                                                                                InkWell(
-                                                                                    onTap: () {
-                                                                                      foundData[index].car!.removeWhere((data) => data.toString() == e.toString());
-                                                                                      setState(() {});
-                                                                                    },
-                                                                                    child: Icon(
-                                                                                      Icons.clear,
-                                                                                      color: Colors.red,
-                                                                                      size: 15,
-                                                                                    ))
-                                                                              ],
-                                                                            ))))
-                                                                        .toList(),
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          SizedBox(
-                                                            height: 5,
-                                                          ),
-                                                          TextFormField(
-                                                            controller:
-                                                                editBikeController,
-                                                            decoration: InputDecoration(
-                                                                border: OutlineInputBorder(),
-                                                                hintText: "GJ05AB1234",
-                                                                prefixIcon: Icon(
-                                                                  Icons
-                                                                      .two_wheeler_outlined,
-                                                                  color: Colors
-                                                                      .cyan,
-                                                                ),
-                                                                suffixIcon: isVisible
-                                                                    ? IconButton(
-                                                                        icon:
-                                                                            Icon(
-                                                                          Icons
-                                                                              .add,
-                                                                          color:
-                                                                              Colors.cyan,
-                                                                        ),
-                                                                        onPressed:
-                                                                            () {
-                                                                          setState(
-                                                                              () {
-                                                                            foundData[index].bike!.add(editBikeController.text.toUpperCase());
-                                                                            editBikeController.clear();
-                                                                          });
-                                                                        },
-                                                                      )
-                                                                    : IconButton(
-                                                                        icon:
-                                                                            Icon(
-                                                                          Icons
-                                                                              .clear,
-                                                                          color:
-                                                                              Colors.red,
-                                                                        ),
-                                                                        onPressed:
-                                                                            () {
-                                                                          editBikeController
-                                                                              .clear();
-                                                                        },
-                                                                      )),
-                                                            onChanged: (val) {
-                                                              Pattern pattern =
-                                                                  r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
-
-                                                              RegExp regex =
-                                                                  RegExp(pattern
-                                                                      .toString());
-                                                              setState(() {
-                                                                (regex.hasMatch(
-                                                                        val))
-                                                                    ? isVisible =
-                                                                        true
-                                                                    : isVisible =
-                                                                        false;
-                                                              });
-                                                            },
-                                                            validator: (val) {
-                                                              Pattern pattern =
-                                                                  r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
-
-                                                              RegExp regex =
-                                                                  RegExp(pattern
-                                                                      .toString());
-                                                              if ((!regex.hasMatch(
-                                                                      val!)) &&
-                                                                  val.isNotEmpty) {
-                                                                return "Enter Valid Number ";
-                                                              }
-                                                            },
-                                                          ),
-                                                          SizedBox(
-                                                            height: 5,
-                                                          ),
-                                                          Container(
-                                                            decoration: BoxDecoration(
-                                                                color: Colors
-                                                                    .black12,
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            10)),
-                                                            height: 80,
-                                                            width:
-                                                                MediaQuery.of(
-                                                                        context)
-                                                                    .size
-                                                                    .width,
-                                                            child: Padding(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .all(8.0),
-                                                              child:
-                                                                  SingleChildScrollView(
-                                                                scrollDirection:
-                                                                    Axis.vertical,
-                                                                child: Center(
-                                                                  child: Wrap(
-                                                                    runSpacing:
-                                                                        10,
-                                                                    spacing: 10,
-                                                                    direction: Axis
-                                                                        .horizontal,
-                                                                    children: foundData[
-                                                                            index]
-                                                                        .bike!
-                                                                        .map((e) => Container(
-                                                                            height: 25,
-                                                                            width: 100,
-                                                                            decoration: BoxDecoration(border: Border.all(color: Colors.black), borderRadius: BorderRadius.circular(20)),
-                                                                            child: Center(
-                                                                                child: Row(
-                                                                              mainAxisAlignment: MainAxisAlignment.center,
-                                                                              children: [
-                                                                                Text(
-                                                                                  e.toString(),
-                                                                                  style: TextStyle(color: Colors.black, fontSize: 12),
-                                                                                ),
-                                                                                InkWell(
-                                                                                    onTap: () {
-                                                                                      foundData[index].bike!.removeWhere((data) => data.toString() == e.toString());
-                                                                                      setState(() {});
-                                                                                    },
-                                                                                    child: Icon(
-                                                                                      Icons.clear,
-                                                                                      color: Colors.red,
-                                                                                      size: 15,
-                                                                                    ))
-                                                                              ],
-                                                                            ))))
-                                                                        .toList(),
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  actions: [
-                                                    TextButton(
-                                                      style: TextButton.styleFrom(
-                                                          side:
-                                                              const BorderSide(
-                                                                  color: Colors
-                                                                      .red)),
-                                                      onPressed: () {
-                                                        Navigator.of(context)
-                                                            .pop();
-                                                      },
-                                                      child: const Text(
-                                                        "Cancle",
-                                                        style: TextStyle(
-                                                            color: Colors.red),
-                                                      ),
-                                                    ),
-                                                    TextButton(
-                                                      style: TextButton.styleFrom(
-                                                          side:
-                                                              const BorderSide(
-                                                                  color: Colors
-                                                                      .cyan)),
-                                                      onPressed: () async {
-                                                        final CollectionReference
-                                                            reference =
-                                                            FirebaseFirestore
-                                                                .instance
-                                                                .collection(
-                                                                    'vehicle');
-
-                                                        QuerySnapshot
-                                                            querysnapshot =
-                                                            await reference
-                                                                .get();
-
-                                                        var createData = {
-                                                          "FlatNo":
-                                                              editFlatNoController
-                                                                  .text
-                                                                  .toUpperCase(),
-                                                          "ownerName":
-                                                              editOwnerController
-                                                                  .text,
-                                                          "contactNo":
-                                                              editContactController
-                                                                  .text,
-                                                          "car": FieldValue
-                                                              .arrayUnion(
-                                                                  foundData[
-                                                                          index]
-                                                                      .car!),
-                                                          "bike": FieldValue
-                                                              .arrayUnion(
-                                                                  foundData[
-                                                                          index]
-                                                                      .bike!),
-                                                        };
-                                                        querysnapshot
-                                                            .docs[index]
-                                                            .reference
-                                                            .update({
-                                                          'car': FieldValue
-                                                              .delete(),
-                                                          'bike': FieldValue
-                                                              .delete()
-                                                        });
-
-                                                        querysnapshot
-                                                            .docs[index]
-                                                            .reference
-                                                            .update(createData)
-                                                            .whenComplete(() => Navigator
-                                                                .pushAndRemoveUntil(
-                                                                    context,
-                                                                    MaterialPageRoute(
-                                                                      builder:
-                                                                          (context) =>
-                                                                              HomeScreen(),
-                                                                    ),
-                                                                    (route) =>
-                                                                        false));
-                                                        // setState((){});
-                                                      },
-                                                      child: const Text(
-                                                        "Update",
-                                                        style: TextStyle(
-                                                            color: Colors.cyan),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                );
-                                              });
-                                            });
-                                      },
-                                    )
+                                    Positioned(
+                                        left: 37,
+                                        top: 34,
+                                        child: InkWell(
+                                          onTap: () {
+                                            editFlatNoController.text =
+                                                foundData[index].flatNo!;
+                                            editOwnerController.text =
+                                                foundData[index].ownerName!;
+                                            editContactController.text =
+                                                foundData[index].contactNo!;
+                                            _editData(context, index);
+                                          },
+                                          child: Container(
+                                              height: 22,
+                                              width: 22,
+                                              decoration: BoxDecoration(
+                                                  color: Colors.cyan,
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          20)),
+                                              child: Icon(
+                                                Icons.edit,
+                                                size: 15,
+                                                color: Colors.white,
+                                              )),
+                                        )),
                                   ],
+                                ),
+                                title: Text(
+                                  foundData[index].ownerName ?? '',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 subtitle: Text(
                                   foundData[index].flatNo ?? '',
@@ -620,9 +187,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
+                                                Divider(
+                                                  thickness: 1,
+                                                ),
                                                 Detail(
                                                   ishome: true,
-                                                  text: '',
                                                   detail:
                                                       foundData[index].flatNo ??
                                                           '',
@@ -631,26 +200,31 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 Detail(
                                                   isperson: true,
                                                   iscall: true,
-                                                  text: '',
                                                   detail: foundData[index]
                                                           .contactNo ??
                                                       '',
                                                 ),
                                                 Divider(thickness: 1),
                                                 Detail(
-                                                  text: '',
                                                   iscar: true,
-                                                  detail: foundData[index]
-                                                      .car!
-                                                      .join(',\n\n'),
+                                                  detail:
+                                                      foundData[index].car ==
+                                                              null
+                                                          ? ""
+                                                          : foundData[index]
+                                                              .car!
+                                                              .join('\n\n'),
                                                 ),
                                                 Divider(thickness: 1),
                                                 Detail(
                                                   isbike: true,
-                                                  text: '',
-                                                  detail: foundData[index]
-                                                      .bike!
-                                                      .join(',\n\n'),
+                                                  detail:
+                                                      foundData[index].bike ==
+                                                              null
+                                                          ? ""
+                                                          : foundData[index]
+                                                              .bike!
+                                                              .join('\n\n'),
                                                 ),
                                               ],
                                             ),
@@ -673,7 +247,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<String> bikeNumber = [];
   List<String> carNumber = [];
 
-  _showDialog(BuildContext context) {
+  _addData(BuildContext context) {
     showDialog(
         context: context,
         builder: (
@@ -685,12 +259,13 @@ class _HomeScreenState extends State<HomeScreen> {
               content: SingleChildScrollView(
                 child: Form(
                   autovalidateMode: AutovalidateMode.onUserInteraction,
-                  key: formKey,
+                  key: addFormKey,
                   child: Column(
                     //mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       TextFormField(
+                        textCapitalization: TextCapitalization.characters,
                         controller: flatNoController,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
@@ -700,9 +275,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: Colors.cyan,
                           ),
                         ),
+                        validator: (val) {
+                          if (val!.isEmpty) {
+                            return "Enter flat no";
+                          }
+                        },
                       ),
                       Divider(),
                       TextFormField(
+                        textCapitalization: TextCapitalization.words,
                         controller: ownerController,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
@@ -712,9 +293,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: Colors.cyan,
                           ),
                         ),
+                        validator: (val) {
+                          if (val!.isEmpty) {
+                            return "Enter Owner Name";
+                          }
+                        },
                       ),
                       Divider(),
                       TextFormField(
+                        keyboardType: TextInputType.phone,
                         controller: contactController,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
@@ -724,18 +311,32 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: Colors.cyan,
                           ),
                         ),
+                        validator: (val) {
+                          Pattern pattern =
+                              r'(^(?:(?:\+|0{0,2})91(\s*[\ -]\s*)?|[0]?)?[456789]\d{9}|(\d[ -]?){10}\d$)';
+
+                          RegExp regex = RegExp(pattern.toString());
+                          if ((!regex.hasMatch(val!))&&val.isNotEmpty) {
+                            return "Enter Valid Contact No";
+                          }
+                          else if(val.length > 16){
+                            return "Enter Valid Contact No";
+                          }
+                          return null;
+                        },
                       ),
                       Divider(),
                       TextFormField(
+                        textCapitalization: TextCapitalization.characters,
                         controller: carController,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          hintText: "GJ05AB1234",
+                          hintText: "Enter Car Number",
                           prefixIcon: Icon(
                             Icons.directions_car,
                             color: Colors.cyan,
                           ),
-                          suffixIcon: isVisible
+                          suffixIcon: isaCar
                               ? IconButton(
                                   icon: Icon(
                                     Icons.add,
@@ -746,13 +347,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                       carNumber.add(
                                           carController.text.toUpperCase());
                                       carController.clear();
+                                      isaCar = false;
                                     });
                                   },
                                 )
                               : IconButton(
                                   icon: Icon(
                                     Icons.clear,
-                                    color: Colors.red,
+                                    color: Colors.black54,
                                   ),
                                   onPressed: () {
                                     carController.clear();
@@ -766,8 +368,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           RegExp regex = RegExp(pattern.toString());
                           setState(() {
                             (regex.hasMatch(val))
-                                ? isVisible = true
-                                : isVisible = false;
+                                ? isaCar = true
+                                : isaCar = false;
                           });
                         },
                         validator: (val) {
@@ -776,7 +378,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                           RegExp regex = RegExp(pattern.toString());
                           if ((!regex.hasMatch(val!)) && val.isNotEmpty) {
-                            return "Enter Valid Number ";
+                            return "Enter This Format GJ05AB1234";
                           }
                           return null;
                         },
@@ -784,54 +386,68 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(
                         height: 5,
                       ),
-                      Container(
+                      (carNumber.length <= 0)
+                          ? Container()
+                          :Container(
                         decoration: BoxDecoration(
-                            color: Colors.black12,
                             borderRadius: BorderRadius.circular(10)),
                         height: 80,
                         width: MediaQuery.of(context).size.width,
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.vertical,
-                          child: Center(
-                            child: Wrap(
-                              runSpacing: 10,
-                              spacing: 10,
-                              direction: Axis.horizontal,
-                              children: carNumber
-                                  .map((e) => Container(
-                                      height: 25,
-                                      width: 100,
-                                      decoration: BoxDecoration(
-                                          border:
-                                              Border.all(color: Colors.black),
-                                          borderRadius:
-                                              BorderRadius.circular(20)),
-                                      child: Center(
-                                          child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            e.toString(),
-                                            style: TextStyle(
-                                                color: Colors.black,
-                                                fontSize: 12),
-                                          ),
-                                          InkWell(
-                                              onTap: () {
-                                                carNumber.removeWhere((data) =>
-                                                    data.toString() ==
-                                                    e.toString());
-                                                setState(() {});
-                                              },
-                                              child: Icon(
-                                                Icons.clear,
-                                                color: Colors.red,
-                                                size: 15,
-                                              ))
-                                        ],
-                                      ))))
-                                  .toList(),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.vertical,
+                            child: Center(
+                              child: Wrap(
+                                runSpacing: 10,
+                                spacing: 10,
+                                direction: Axis.horizontal,
+                                children: carNumber
+                                    .map((e) => Container(
+                                        height: 25,
+                                        width: 100,
+                                        decoration: BoxDecoration(
+                                            color: Colors.cyan,
+                                            borderRadius:
+                                                BorderRadius.circular(20)),
+                                        child: Center(
+                                            child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              e.toString(),
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12),
+                                            ),
+                                            SizedBox(
+                                              width: 3,
+                                            ),
+                                            InkWell(
+                                                onTap: () {
+                                                  carNumber.removeWhere(
+                                                      (data) =>
+                                                          data.toString() ==
+                                                          e.toString());
+                                                  setState(() {});
+                                                },
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                      color: Colors.white,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              20)),
+                                                  child: Icon(
+                                                    Icons.clear,
+                                                    color: Colors.red,
+                                                    size: 15,
+                                                  ),
+                                                ))
+                                          ],
+                                        ))))
+                                    .toList(),
+                              ),
                             ),
                           ),
                         ),
@@ -840,15 +456,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         height: 5,
                       ),
                       TextFormField(
+                        textCapitalization: TextCapitalization.characters,
                         controller: bikeController,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          hintText: "GJ05AB1212  ",
+                          hintText: "Enter Bike Number",
                           prefixIcon: Icon(
                             Icons.two_wheeler_outlined,
                             color: Colors.cyan,
                           ),
-                          suffixIcon: isVisible
+                          suffixIcon: isabike
                               ? IconButton(
                                   icon: Icon(
                                     Icons.add,
@@ -859,13 +476,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                       bikeNumber.add(
                                           bikeController.text.toUpperCase());
                                       bikeController.clear();
+                                      isabike = false;
                                     });
                                   },
                                 )
                               : IconButton(
                                   icon: Icon(
                                     Icons.clear,
-                                    color: Colors.red,
+                                    color: Colors.black54,
                                   ),
                                   onPressed: () {
                                     bikeController.clear();
@@ -879,8 +497,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           RegExp regex = RegExp(pattern.toString());
                           setState(() {
                             (regex.hasMatch(val))
-                                ? isVisible = true
-                                : isVisible = false;
+                                ? isabike = true
+                                : isabike = false;
                           });
                         },
                         validator: (val) {
@@ -889,7 +507,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                           RegExp regex = RegExp(pattern.toString());
                           if ((!regex.hasMatch(val!)) && val.isNotEmpty) {
-                            return "Enter Valid Number ";
+                            return "Enter This Format GJ05AB1234";
                           }
                           /*else if(bikeController.text == bikeNumber){
                           return "Enter Correct number";
@@ -899,54 +517,68 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(
                         height: 5,
                       ),
-                      Container(
+                      (bikeNumber.length <= 0)
+                          ? Container()
+                          :Container(
                         decoration: BoxDecoration(
-                            color: Colors.black12,
                             borderRadius: BorderRadius.circular(10)),
                         height: 80,
                         width: MediaQuery.of(context).size.width,
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.vertical,
-                          child: Center(
-                            child: Wrap(
-                              runSpacing: 10,
-                              spacing: 10,
-                              direction: Axis.horizontal,
-                              children: bikeNumber
-                                  .map((e) => Container(
-                                      height: 25,
-                                      width: 100,
-                                      decoration: BoxDecoration(
-                                          border:
-                                              Border.all(color: Colors.black),
-                                          borderRadius:
-                                              BorderRadius.circular(20)),
-                                      child: Center(
-                                          child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            e.toString(),
-                                            style: TextStyle(
-                                                color: Colors.black,
-                                                fontSize: 12),
-                                          ),
-                                          InkWell(
-                                              onTap: () {
-                                                bikeNumber.removeWhere((data) =>
-                                                    data.toString() ==
-                                                    e.toString());
-                                                setState(() {});
-                                              },
-                                              child: Icon(
-                                                Icons.clear,
-                                                color: Colors.red,
-                                                size: 15,
-                                              ))
-                                        ],
-                                      ))))
-                                  .toList(),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.vertical,
+                            child: Center(
+                              child: Wrap(
+                                runSpacing: 10,
+                                spacing: 10,
+                                direction: Axis.horizontal,
+                                children: bikeNumber
+                                    .map((e) => Container(
+                                        height: 25,
+                                        width: 100,
+                                        decoration: BoxDecoration(
+                                            color: Colors.cyan,
+                                            borderRadius:
+                                                BorderRadius.circular(20)),
+                                        child: Center(
+                                            child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              e.toString(),
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12),
+                                            ),
+                                            SizedBox(
+                                              width: 3,
+                                            ),
+                                            InkWell(
+                                                onTap: () {
+                                                  bikeNumber.removeWhere(
+                                                      (data) =>
+                                                          data.toString() ==
+                                                          e.toString());
+                                                  setState(() {});
+                                                },
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                      color: Colors.white,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              20)),
+                                                  child: Icon(
+                                                    Icons.clear,
+                                                    color: Colors.red,
+                                                    size: 15,
+                                                  ),
+                                                ))
+                                          ],
+                                        ))))
+                                    .toList(),
+                              ),
                             ),
                           ),
                         ),
@@ -971,21 +603,23 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextButton.styleFrom(
                       side: const BorderSide(color: Colors.cyan)),
                   onPressed: () {
-                    var createData = {
-                      "FlatNo": flatNoController.text.toUpperCase(),
-                      "ownerName": ownerController.text,
-                      "contactNo": contactController.text,
-                      "bike": FieldValue.arrayUnion(bikeNumber),
-                      "car": FieldValue.arrayUnion(carNumber),
-                    };
-                    reference
-                        .add(createData)
-                        .whenComplete(() => Navigator.pushAndRemoveUntil(
+                    if (addFormKey.currentState!.validate()) {
+                      var createData = {
+                        "FlatNo": flatNoController.text.toUpperCase(),
+                        "ownerName": ownerController.text,
+                        "contactNo": contactController.text,
+                        "bike": FieldValue.arrayUnion(bikeNumber),
+                        "car": FieldValue.arrayUnion(carNumber),
+                      };
+                      reference.add(createData).whenComplete(() {
+                        Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
                               builder: (context) => HomeScreen(),
                             ),
-                            (route) => false));
+                            (route) => false);
+                      });
+                    }
                   },
                   child: const Text(
                     "Save",
@@ -998,7 +632,7 @@ class _HomeScreenState extends State<HomeScreen> {
         });
   }
 
-/*  _editData(BuildContext context) {
+  _editData(BuildContext context, int index) {
     showDialog(
         context: context,
         builder: (
@@ -1006,15 +640,17 @@ class _HomeScreenState extends State<HomeScreen> {
         ) {
           return StatefulBuilder(builder: (_, StateSetter setState) {
             return AlertDialog(
-              title: Text("Enter Edit Detail"),
+              title: const Text("Edit Detail"),
               content: SingleChildScrollView(
                 child: Form(
+                  key: editFormKey,
                   autovalidateMode: AutovalidateMode.onUserInteraction,
                   child: Column(
                     //mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       TextFormField(
+                        textCapitalization: TextCapitalization.characters,
                         controller: editFlatNoController,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
@@ -1024,17 +660,34 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: Colors.cyan,
                           ),
                         ),
+                        validator: (val) {
+                          if (val!.isEmpty) {
+                            return "Enter flat no";
+                          }
+                        },
+                      ),
+                      SizedBox(
+                        height: 5,
                       ),
                       TextFormField(
+                        textCapitalization: TextCapitalization.words,
                         controller: editOwnerController,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
                           hintText: "Owner Name",
                           prefixIcon: Icon(
-                            Icons.home,
+                            Icons.person,
                             color: Colors.cyan,
                           ),
                         ),
+                        validator: (val) {
+                          if (val!.isEmpty) {
+                            return "Enter Owner Name";
+                          }
+                        },
+                      ),
+                      SizedBox(
+                        height: 5,
                       ),
                       TextFormField(
                         controller: editContactController,
@@ -1046,7 +699,280 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: Colors.cyan,
                           ),
                         ),
+                        keyboardType: TextInputType.phone,
+                        validator: (val) {
+                          Pattern pattern =
+                              r'(^(?:(?:\+|0{0,2})91(\s*[\ -]\s*)?|[0]?)?[456789]\d{9}|(\d[ -]?){10}\d$)';
+
+                          RegExp regex = RegExp(pattern.toString());
+                          if ((!regex.hasMatch(val!))&&val.isNotEmpty) {
+                            return "Enter Valid Contact No";
+                          }
+                          else if(val.length > 16){
+                            return "Enter Valid Contact No";
+                          }
+                          return null;
+                        },
                       ),
+                      SizedBox(
+                        height: 5,
+                      ),
+                      TextFormField(
+                        textCapitalization: TextCapitalization.characters,
+                        controller: editCarController,
+                        decoration: InputDecoration(
+                            border: OutlineInputBorder(),
+                            hintText: "Enter Car Number",
+                            prefixIcon: Icon(
+                              Icons.directions_car,
+                              color: Colors.cyan,
+                            ),
+                            suffixIcon: isEcar
+                                ? IconButton(
+                                    icon: Icon(Icons.add),
+                                    onPressed: () {
+                                      foundData[index].car!.add(
+                                          editCarController.text.toUpperCase());
+                                      editCarController.clear();
+                                      isEcar = false;
+                                      setState(() {});
+                                    },
+                                  )
+                                : IconButton(
+                                    icon: Icon(
+                                      Icons.clear,
+                                      color: Colors.black54,
+                                    ),
+                                    onPressed: () {
+                                      editCarController.clear();
+                                    },
+                                  )),
+                        onChanged: (val) {
+                          Pattern pattern =
+                              r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
+
+                          RegExp regex = RegExp(pattern.toString());
+                          setState(() {
+                            (regex.hasMatch(val))
+                                ? isEcar = true
+                                : isEcar = false;
+                          });
+                        },
+                        validator: (val) {
+                          Pattern pattern =
+                              r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
+
+                          RegExp regex = RegExp(pattern.toString());
+                          if ((!regex.hasMatch(val!)) && val.isNotEmpty) {
+                            return "Enter This Format GJ05AB1234";
+                          }
+                        },
+                      ),
+                      SizedBox(
+                        height: 5,
+                      ),
+                      (foundData[index].car?.length ?? 0) <= 0
+                          ? Container()
+                          : Container(
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10)),
+                              height: 80,
+                              width: MediaQuery.of(context).size.width,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.vertical,
+                                  child: Center(
+                                    child: Wrap(
+                                      runSpacing: 10,
+                                      spacing: 10,
+                                      direction: Axis.horizontal,
+                                      children: foundData[index]
+                                          .car!
+                                          .map((e) => Container(
+                                              height: 25,
+                                              width: 100,
+                                              decoration: BoxDecoration(
+                                                  color: Colors.cyan,
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          20)),
+                                              child: Center(
+                                                  child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                    e.toString(),
+                                                    style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 12),
+                                                  ),
+                                                  SizedBox(
+                                                    width: 3,
+                                                  ),
+                                                  InkWell(
+                                                      onTap: () {
+                                                        foundData[index]
+                                                            .car!
+                                                            .removeWhere((data) =>
+                                                                data.toString() ==
+                                                                e.toString());
+                                                        setState(() {});
+                                                      },
+                                                      child: Container(
+                                                        decoration: BoxDecoration(
+                                                            color: Colors.white,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        20)),
+                                                        child: Icon(
+                                                          Icons.clear,
+                                                          color: Colors.red,
+                                                          size: 15,
+                                                        ),
+                                                      ))
+                                                ],
+                                              ))))
+                                          .toList(),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                      SizedBox(
+                        height: 5,
+                      ),
+                      TextFormField(
+                        textCapitalization: TextCapitalization.characters,
+                        controller: editBikeController,
+                        decoration: InputDecoration(
+                            border: OutlineInputBorder(),
+                            hintText: "Enter Bike Number",
+                            prefixIcon: Icon(
+                              Icons.two_wheeler_outlined,
+                              color: Colors.cyan,
+                            ),
+                            suffixIcon: isEbike
+                                ? IconButton(
+                                    icon: Icon(
+                                      Icons.add,
+                                      color: Colors.cyan,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        foundData[index].bike!.add(
+                                            editBikeController.text
+                                                .toUpperCase());
+                                        editBikeController.clear();
+                                        isEbike = false;
+                                      });
+                                    },
+                                  )
+                                : IconButton(
+                                    icon: Icon(
+                                      Icons.clear,
+                                      color: Colors.black54,
+                                    ),
+                                    onPressed: () {
+                                      editBikeController.clear();
+                                    },
+                                  )),
+                        onChanged: (val) {
+                          Pattern pattern =
+                              r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
+
+                          RegExp regex = RegExp(pattern.toString());
+                          setState(() {
+                            (regex.hasMatch(val))
+                                ? isEbike = true
+                                : isEbike = false;
+                          });
+                        },
+                        validator: (val) {
+                          Pattern pattern =
+                              r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
+
+                          RegExp regex = RegExp(pattern.toString());
+                          if ((!regex.hasMatch(val!)) && val.isNotEmpty) {
+                            return "Enter This Format GJ05AB1234";
+                          }
+                        },
+                      ),
+                      SizedBox(
+                        height: 5,
+                      ),
+                      (foundData[index].bike?.length ?? 0) <= 0
+                          ? Container()
+                          : Container(
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10)),
+                              height: 80,
+                              width: MediaQuery.of(context).size.width,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.vertical,
+                                  child: Center(
+                                    child: Wrap(
+                                      runSpacing: 10,
+                                      spacing: 10,
+                                      direction: Axis.horizontal,
+                                      children: foundData[index]
+                                          .bike!
+                                          .map((e) => Container(
+                                              height: 25,
+                                              width: 100,
+                                              decoration: BoxDecoration(
+                                                  color: Colors.cyan,
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          20)),
+                                              child: Center(
+                                                  child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                    e.toString(),
+                                                    style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 12),
+                                                  ),
+                                                  SizedBox(
+                                                    width: 3,
+                                                  ),
+                                                  InkWell(
+                                                      onTap: () {
+                                                        foundData[index]
+                                                            .bike!
+                                                            .removeWhere((data) =>
+                                                                data.toString() ==
+                                                                e.toString());
+                                                        setState(() {});
+                                                      },
+                                                      child: Container(
+                                                        decoration: BoxDecoration(
+                                                            color: Colors.white,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        20)),
+                                                        child: Icon(
+                                                          Icons.clear,
+                                                          color: Colors.red,
+                                                          size: 15,
+                                                        ),
+                                                      ))
+                                                ],
+                                              ))))
+                                          .toList(),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                     ],
                   ),
                 ),
@@ -1067,102 +993,96 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextButton.styleFrom(
                       side: const BorderSide(color: Colors.cyan)),
                   onPressed: () async {
-                    final CollectionReference reference =
-                        FirebaseFirestore.instance.collection('vehicle');
+                    if (editFormKey.currentState!.validate()) {
+                      final firestoreInstance = FirebaseFirestore.instance;
 
-                    QuerySnapshot querysnapshot = await reference.get();
+                      firestoreInstance
+                          .collection("vehicle")
+                          .doc(foundData[index].uid)
+                          .update({
+                        'car': FieldValue.delete(),
+                        'bike': FieldValue.delete()
+                      });
+                      var createData = {
+                        "FlatNo": editFlatNoController.text.toUpperCase(),
+                        "ownerName": editOwnerController.text,
+                        "contactNo": editContactController.text,
+                        "car": foundData[index].car == null
+                            ? null
+                            : FieldValue.arrayUnion(foundData[index].car!),
+                        "bike": foundData[index].bike == null
+                            ? null
+                            : FieldValue.arrayUnion(foundData[index].bike!),
+                      };
 
-                    var createData = {
-                      "FlatNo": editFlatNoController.text.toUpperCase(),
-                      "ownerName": editOwnerController.text,
-                      "contactNo": editContactController.text,
-                      //"bike": FieldValue.arrayUnion(bikeNumber),
-                      //"car": FieldValue.arrayUnion(carNumber),
-                    };
-                    querysnapshot.docs[1].reference
-                        .update(createData)
-                        .whenComplete(() => Navigator.of(context).pop());
+                      firestoreInstance
+                          .collection("vehicle")
+                          .doc(foundData[index].uid)
+                          .update(createData)
+                          .whenComplete(() {
+                        Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => HomeScreen()),
+                            (route) => false);
+
+                        //Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) =>
+                        // HomeScreen()), (Route<dynamic> route) => false);
+                      });
+                    }
+
+                    // setState((){});
                   },
                   child: const Text(
                     "Update",
                     style: TextStyle(color: Colors.cyan),
                   ),
                 ),
+
+                /*
+                TextButton(
+                  style: TextButton.styleFrom(
+                      side: const BorderSide(color: Colors.cyan)),
+                  onPressed: () async {
+                    QuerySnapshot querySnapshot = await reference.get();
+                    if (editFormKey.currentState!.validate()) {
+                      querySnapshot.docs[index].reference.update({
+                        'car': FieldValue.delete(),
+                        'bike': FieldValue.delete()
+                      });
+                      var createData = {
+                        "FlatNo": editFlatNoController.text.toUpperCase(),
+                        "ownerName": editOwnerController.text,
+                        "contactNo": editContactController.text,
+                        "car": FieldValue.arrayUnion(foundData[index].car!),
+                        "bike": FieldValue.arrayUnion(foundData[index].bike!),
+                      };
+
+
+                      querySnapshot.docs[index].reference
+                          .update(createData)
+                          .whenComplete(() {
+                        Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => HomeScreen()),(route) => false);
+
+                         //Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) =>
+                          // HomeScreen()), (Route<dynamic> route) => false);
+                      });
+                    }
+
+                    // setState((){});
+                  },
+                  child: const Text(
+                    "Update",
+                    style: TextStyle(color: Colors.cyan),
+                  ),
+                ),
+                */
               ],
             );
           });
         });
-  }*/
-}
-
-class Detail extends StatelessWidget {
-  const Detail(
-      {Key? key,
-      required this.text,
-      required this.detail,
-      this.iscall = false,
-      this.iscar = false,
-      this.isbike = false,
-      this.isperson = false,
-      this.ishome = false});
-
-  final String text;
-  final String detail;
-  final bool iscall;
-  final bool iscar;
-  final bool isbike;
-  final bool isperson;
-  final bool ishome;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      child: Row(
-        children: [
-          if (ishome)
-            Icon(
-              Icons.home,
-              color: Colors.black54,
-            ),
-          if (iscar)
-            Icon(
-              Icons.directions_car,
-              color: Colors.black54,
-            ),
-          if (isbike)
-            Icon(
-              Icons.two_wheeler_outlined,
-              color: Colors.black54,
-            ),
-          if (isperson)
-            Icon(
-              Icons.person,
-              color: Colors.black54,
-            ),
-          Container(
-              width: MediaQuery.of(context).size.width / 15,
-              child: Text(
-                text,
-                style: TextStyle(fontWeight: FontWeight.bold),
-              )),
-          Text(
-            ":  ",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          Container(
-            child: Expanded(child: Text(detail)),
-          ),
-          if (iscall)
-            IconButton(
-                icon: Icon(
-                  Icons.call,
-                  color: Colors.cyan,
-                ),
-                onPressed: () {
-                  UserController().callDial(phoneNumber: detail);
-                }),
-        ],
-      ),
-    );
   }
 }
