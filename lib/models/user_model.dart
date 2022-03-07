@@ -39,6 +39,3 @@ class UserData {
     "uid":uid
   };
 }
-// To parse this JSON data, do
-//
-//     final userData = userDataFromJson(jsonString);

@@ -1,6 +1,6 @@
 import 'dart:core';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../user_controller/user_controller.dart';
@@ -44,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
+
     super.initState();
     fetchData();
   }
@@ -56,6 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
       foundData.addAll(userAllData);
     });
     foundData.sort((a, b) => a.flatNo!.compareTo(b.flatNo!));
+    foundData.sort((a, b) => b.flatNo!.compareTo(a.flatNo!));
   }
 
   void runFilter(String enterVal) {
@@ -326,6 +327,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                       ),
                       Divider(),
+                      Padding(
+                        padding: const EdgeInsets.all(2.0),
+                        child: Text("After entering the car number press +",style: TextStyle(fontSize: 10,fontWeight: FontWeight.bold,color: Colors.grey),),
+                      ),
                       TextFormField(
                         textCapitalization: TextCapitalization.characters,
                         controller: carController,
@@ -454,6 +459,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(
                         height: 5,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(2.0),
+                        child: Text("After entering the Bike number press +",style: TextStyle(fontSize: 10,fontWeight: FontWeight.bold,color: Colors.grey),),
                       ),
                       TextFormField(
                         textCapitalization: TextCapitalization.characters,
@@ -717,6 +726,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       SizedBox(
                         height: 5,
                       ),
+                      Padding(
+                        padding: const EdgeInsets.all(2.0),
+                        child: Text("After entering the car number press +",style: TextStyle(fontSize: 10,fontWeight: FontWeight.bold,color: Colors.grey),),
+                      ),
                       TextFormField(
                         textCapitalization: TextCapitalization.characters,
                         controller: editCarController,
@@ -843,6 +856,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                       SizedBox(
                         height: 5,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(2.0),
+                        child: Text("After entering the Bike number press +",style: TextStyle(fontSize: 10,fontWeight: FontWeight.bold,color: Colors.grey),),
                       ),
                       TextFormField(
                         textCapitalization: TextCapitalization.characters,
@@ -1026,8 +1043,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 builder: (context) => HomeScreen()),
                             (route) => false);
 
-                        //Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) =>
-                        // HomeScreen()), (Route<dynamic> route) => false);
+
                       });
                     }
 
@@ -1038,7 +1054,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(color: Colors.cyan),
                   ),
                 ),
-
                 /*
                 TextButton(
                   style: TextButton.styleFrom(

@@ -28,17 +28,5 @@ class UserController {
     }
   }
 
-/*
-  Future editUser(String flatno,String ownerName,String contactNo)async{
-
-    await reference.doc().update({
-      'FlatNo': flatno,
-      "ownerName": ownerName,
-      'contactNo': contactNo,
-
-    });
-  }
-
-*/
 
 }
