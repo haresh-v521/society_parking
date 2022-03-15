@@ -1,6 +1,7 @@
 import 'dart:core';
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../user_controller/user_controller.dart';
@@ -56,7 +57,6 @@ class _HomeScreenState extends State<HomeScreen> {
       foundData.addAll(userAllData);
     });
     foundData.sort((a, b) => a.flatNo!.compareTo(b.flatNo!));
-    foundData.sort((a, b) => b.flatNo!.compareTo(a.flatNo!));
   }
 
   void runFilter(String enterVal) {
@@ -101,28 +101,171 @@ class _HomeScreenState extends State<HomeScreen> {
           centerTitle: true,
           elevation: 0,
         ),
-        body: Padding(
-            padding: const EdgeInsets.all(15.0),
-            child: Container(
-              child: Column(
-                children: [
-                  TextField(
-                    controller: textEditingController,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: "Search",
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: Colors.cyan,
-                      ),
+        body: kIsWeb ?
+        Container(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                TextField(
+                  controller: textEditingController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: "Search",
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: Colors.cyan,
                     ),
-                    onChanged: (String val) => runFilter(val),
                   ),
-                  Divider(
-                    thickness: 2,
+                  onChanged: (String val) => runFilter(val),
+                ),
+                Divider(
+                  thickness: 2,
+                ),
+                Expanded(
+                    child: SingleChildScrollView(
+                  child: Container(
+                    child: ListView.builder(
+                        physics: BouncingScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: foundData.length,
+                        itemBuilder: (context, index) {
+                          return Card(
+                            child: ExpansionTile(
+                              leading: Stack(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 30,
+                                    backgroundImage: AssetImage(
+                                        "asset/images/profile.png"),
+                                  ),
+                                  Positioned(
+                                      left: 38,
+                                      top: 30,
+                                      child: InkWell(
+                                        onTap: () {
+                                          editFlatNoController.text =
+                                              foundData[index].flatNo!;
+                                          editOwnerController.text =
+                                              foundData[index].ownerName!;
+                                          editContactController.text =
+                                              foundData[index].contactNo!;
+
+                                          _editData(context, index);
+                                        },
+                                        child: Container(
+                                            height: 18,
+                                            width: 18,
+                                            decoration: BoxDecoration(
+                                                color: Colors.cyan,
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                        20)),
+                                            child: Icon(
+                                              Icons.edit,
+                                              size: 13,
+                                              color: Colors.white,
+                                            )),
+                                      ))
+                                ],
+                              ),
+                              title: Text(
+                                foundData[index].ownerName ?? '',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text(
+                                foundData[index].flatNo ?? '',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.cyan),
+                              ),
+                              children: [
+                                Container(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(10.0),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Divider(
+                                                thickness: 1,
+                                              ),
+                                              Detail(
+                                                ishome: true,
+                                                detail:
+                                                    foundData[index].flatNo ??
+                                                        '',
+                                              ),
+                                              Divider(thickness: 1),
+                                              Detail(
+                                                isperson: true,
+                                                iscall: true,
+                                                detail: foundData[index]
+                                                        .contactNo ??
+                                                    '',
+                                              ),
+                                              Divider(thickness: 1),
+                                              Detail(
+                                                iscar: true,
+                                                detail:
+                                                    foundData[index].car ==
+                                                            null
+                                                        ? ""
+                                                        : foundData[index]
+                                                            .car!
+                                                            .join('\n\n'),
+                                              ),
+                                              Divider(thickness: 1),
+                                              Detail(
+                                                isbike: true,
+                                                detail:
+                                                    foundData[index].bike ==
+                                                            null
+                                                        ? ""
+                                                        : foundData[index]
+                                                            .bike!
+                                                            .join('\n\n'),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
                   ),
-                  Expanded(
-                      child: SingleChildScrollView(
+                )),
+              ],
+            ),
+          ),
+        ):
+        Container(
+          child: Column(
+            children: [
+              TextField(
+                controller: textEditingController,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: "Search",
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: Colors.cyan,
+                  ),
+                ),
+                onChanged: (String val) => runFilter(val),
+              ),
+              Divider(
+                thickness: 2,
+              ),
+              Expanded(
+                  child: SingleChildScrollView(
                     child: Container(
                       child: ListView.builder(
                           physics: BouncingScrollPhysics(),
@@ -131,41 +274,44 @@ class _HomeScreenState extends State<HomeScreen> {
                           itemBuilder: (context, index) {
                             return Card(
                               child: ExpansionTile(
-                                leading: Stack(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 30,
-                                      backgroundImage: AssetImage(
-                                          "asset/images/profile.png"),
-                                    ),
-                                    Positioned(
-                                        left: 37,
-                                        top: 34,
-                                        child: InkWell(
-                                          onTap: () {
-                                            editFlatNoController.text =
-                                                foundData[index].flatNo!;
-                                            editOwnerController.text =
-                                                foundData[index].ownerName!;
-                                            editContactController.text =
-                                                foundData[index].contactNo!;
-                                            _editData(context, index);
-                                          },
-                                          child: Container(
-                                              height: 22,
-                                              width: 22,
-                                              decoration: BoxDecoration(
-                                                  color: Colors.cyan,
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          20)),
-                                              child: Icon(
-                                                Icons.edit,
-                                                size: 15,
-                                                color: Colors.white,
-                                              )),
-                                        )),
-                                  ],
+                                leading: Padding(
+                                  padding: const EdgeInsets.all(3.0),
+                                  child: Stack(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 30,
+                                        backgroundImage: AssetImage(
+                                            "asset/images/profile.png"),
+                                      ),
+                                      Positioned(
+                                          left: 38,
+                                          top: 32,
+                                          child: InkWell(
+                                            onTap: () {
+                                              editFlatNoController.text =
+                                              foundData[index].flatNo!;
+                                              editOwnerController.text =
+                                              foundData[index].ownerName!;
+                                              editContactController.text =
+                                              foundData[index].contactNo!;
+                                              _editData(context, index);
+                                            },
+                                            child: Container(
+                                                height: 18,
+                                                width: 18,
+                                                decoration: BoxDecoration(
+                                                    color: Colors.cyan,
+                                                    borderRadius:
+                                                    BorderRadius.circular(
+                                                        20)),
+                                                child: Icon(
+                                                  Icons.edit,
+                                                  size: 13,
+                                                  color: Colors.white,
+                                                )),
+                                          ))
+                                    ],
+                                  ),
                                 ),
                                 title: Text(
                                   foundData[index].ownerName ?? '',
@@ -186,7 +332,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           Expanded(
                                             child: Column(
                                               crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
+                                              CrossAxisAlignment.start,
                                               children: [
                                                 Divider(
                                                   thickness: 1,
@@ -194,38 +340,38 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 Detail(
                                                   ishome: true,
                                                   detail:
-                                                      foundData[index].flatNo ??
-                                                          '',
+                                                  foundData[index].flatNo ??
+                                                      '',
                                                 ),
                                                 Divider(thickness: 1),
                                                 Detail(
                                                   isperson: true,
                                                   iscall: true,
                                                   detail: foundData[index]
-                                                          .contactNo ??
+                                                      .contactNo ??
                                                       '',
                                                 ),
                                                 Divider(thickness: 1),
                                                 Detail(
                                                   iscar: true,
                                                   detail:
-                                                      foundData[index].car ==
-                                                              null
-                                                          ? ""
-                                                          : foundData[index]
-                                                              .car!
-                                                              .join('\n\n'),
+                                                  foundData[index].car ==
+                                                      null
+                                                      ? ""
+                                                      : foundData[index]
+                                                      .car!
+                                                      .join('\n\n'),
                                                 ),
                                                 Divider(thickness: 1),
                                                 Detail(
                                                   isbike: true,
                                                   detail:
-                                                      foundData[index].bike ==
-                                                              null
-                                                          ? ""
-                                                          : foundData[index]
-                                                              .bike!
-                                                              .join('\n\n'),
+                                                  foundData[index].bike ==
+                                                      null
+                                                      ? ""
+                                                      : foundData[index]
+                                                      .bike!
+                                                      .join('\n\n'),
                                                 ),
                                               ],
                                             ),
@@ -240,9 +386,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           }),
                     ),
                   )),
-                ],
-              ),
-            )));
+            ],
+          ),
+        ));
   }
 
   List<String> bikeNumber = [];
@@ -655,6 +801,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   key: editFormKey,
                   autovalidateMode: AutovalidateMode.onUserInteraction,
                   child: Column(
+
                     //mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
@@ -1054,47 +1201,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(color: Colors.cyan),
                   ),
                 ),
-                /*
-                TextButton(
-                  style: TextButton.styleFrom(
-                      side: const BorderSide(color: Colors.cyan)),
-                  onPressed: () async {
-                    QuerySnapshot querySnapshot = await reference.get();
-                    if (editFormKey.currentState!.validate()) {
-                      querySnapshot.docs[index].reference.update({
-                        'car': FieldValue.delete(),
-                        'bike': FieldValue.delete()
-                      });
-                      var createData = {
-                        "FlatNo": editFlatNoController.text.toUpperCase(),
-                        "ownerName": editOwnerController.text,
-                        "contactNo": editContactController.text,
-                        "car": FieldValue.arrayUnion(foundData[index].car!),
-                        "bike": FieldValue.arrayUnion(foundData[index].bike!),
-                      };
 
-
-                      querySnapshot.docs[index].reference
-                          .update(createData)
-                          .whenComplete(() {
-                        Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => HomeScreen()),(route) => false);
-
-                         //Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) =>
-                          // HomeScreen()), (Route<dynamic> route) => false);
-                      });
-                    }
-
-                    // setState((){});
-                  },
-                  child: const Text(
-                    "Update",
-                    style: TextStyle(color: Colors.cyan),
-                  ),
-                ),
-                */
               ],
             );
           });
