@@ -11,8 +11,6 @@ class UserController {
   Future getUserList() async {
     await reference.get().then((value) {
       value.docChanges.forEach((element) {
-        print(element.doc.id);
-
         userlist
             .add(UserData.fromJson(element.doc.data() as Map<String, dynamic>,uid: element.doc.id),);
       });
@@ -27,6 +25,4 @@ class UserController {
       throw ("Cannot Dial");
     }
   }
-
-
 }

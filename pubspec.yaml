@@ -39,9 +39,7 @@ dependencies:
   url_launcher: ^6.0.20
   firebase_auth: ^3.3.9
   shared_preferences: ^2.0.13
-
-
-
+  get: ^4.6.5
 
 dev_dependencies:
   flutter_test:

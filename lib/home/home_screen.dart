@@ -1,8 +1,8 @@
 import 'dart:core';
-import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../models/user_model.dart';
 import '../user_controller/user_controller.dart';
 import 'detail.dart';
@@ -37,6 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<UserData> userAllData = [];
   List<UserData> foundData = [];
+  List<UserData> flatList = [];
 
   bool isabike = false;
   bool isaCar = false;
@@ -45,9 +46,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
-
     super.initState();
     fetchData();
+    getUserList();
   }
 
   fetchData() async {
@@ -57,6 +58,20 @@ class _HomeScreenState extends State<HomeScreen> {
       foundData.addAll(userAllData);
     });
     foundData.sort((a, b) => a.flatNo!.compareTo(b.flatNo!));
+  }
+
+  Future getUserList() async {
+    await reference.get().then((value) {
+      value.docChanges.forEach((element) {
+        flatList.add(
+          UserData.fromJson(
+            element.doc.data() as Map<String, dynamic>,
+            uid: element.doc.get('FlatNo'),
+          ),
+        );
+      });
+    });
+    return flatList;
   }
 
   void runFilter(String enterVal) {
@@ -87,101 +102,99 @@ class _HomeScreenState extends State<HomeScreen> {
         appBar: AppBar(
           actions: [
             IconButton(
-              icon: Icon(Icons.add),
+              icon: const Icon(Icons.add),
               onPressed: () {
                 _addData(context);
               },
             ),
           ],
           backgroundColor: Colors.cyan,
-          title: Text(
+          title: const Text(
             "Society Parking",
             style: TextStyle(color: Colors.white),
           ),
           centerTitle: true,
           elevation: 0,
         ),
-        body: kIsWeb ?
-        Container(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                TextField(
-                  controller: textEditingController,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: "Search",
-                    prefixIcon: Icon(
-                      Icons.search,
-                      color: Colors.cyan,
+        body: kIsWeb
+            ? Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: textEditingController,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: "Search",
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: Colors.cyan,
+                        ),
+                      ),
+                      onChanged: (String val) => runFilter(val),
                     ),
-                  ),
-                  onChanged: (String val) => runFilter(val),
-                ),
-                Divider(
-                  thickness: 2,
-                ),
-                Expanded(
-                    child: SingleChildScrollView(
-                  child: Container(
-                    child: ListView.builder(
-                        physics: BouncingScrollPhysics(),
-                        shrinkWrap: true,
-                        itemCount: foundData.length,
-                        itemBuilder: (context, index) {
-                          return Card(
-                            child: ExpansionTile(
-                              leading: Stack(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 30,
-                                    backgroundImage: AssetImage(
-                                        "asset/images/profile.png"),
-                                  ),
-                                  Positioned(
-                                      left: 38,
-                                      top: 30,
-                                      child: InkWell(
-                                        onTap: () {
-                                          editFlatNoController.text =
-                                              foundData[index].flatNo!;
-                                          editOwnerController.text =
-                                              foundData[index].ownerName!;
-                                          editContactController.text =
-                                              foundData[index].contactNo!;
+                    const Divider(
+                      thickness: 2,
+                    ),
+                    Expanded(
+                        child: SingleChildScrollView(
+                      child: ListView.builder(
+                          physics: const BouncingScrollPhysics(),
+                          shrinkWrap: true,
+                          itemCount: foundData.length,
+                          itemBuilder: (context, index) {
+                            return Card(
+                              child: ExpansionTile(
+                                leading: Stack(
+                                  children: [
+                                    const CircleAvatar(
+                                      radius: 30,
+                                      backgroundImage: AssetImage(
+                                          "asset/images/profile.png"),
+                                    ),
+                                    Positioned(
+                                        left: 38,
+                                        top: 30,
+                                        child: InkWell(
+                                          onTap: () {
+                                            editFlatNoController.text =
+                                                foundData[index].flatNo!;
+                                            editOwnerController.text =
+                                                foundData[index].ownerName!;
+                                            editContactController.text =
+                                                foundData[index].contactNo!;
 
-                                          _editData(context, index);
-                                        },
-                                        child: Container(
-                                            height: 18,
-                                            width: 18,
-                                            decoration: BoxDecoration(
-                                                color: Colors.cyan,
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                        20)),
-                                            child: Icon(
-                                              Icons.edit,
-                                              size: 13,
-                                              color: Colors.white,
-                                            )),
-                                      ))
-                                ],
-                              ),
-                              title: Text(
-                                foundData[index].ownerName ?? '',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              subtitle: Text(
-                                foundData[index].flatNo ?? '',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.cyan),
-                              ),
-                              children: [
-                                Container(
-                                  child: Padding(
+                                            _editData(context, index);
+                                          },
+                                          child: Container(
+                                              height: 18,
+                                              width: 18,
+                                              decoration: BoxDecoration(
+                                                  color: Colors.cyan,
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          20)),
+                                              child: const Icon(
+                                                Icons.edit,
+                                                size: 13,
+                                                color: Colors.white,
+                                              )),
+                                        ))
+                                  ],
+                                ),
+                                title: Text(
+                                  foundData[index].ownerName ?? '',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                subtitle: Text(
+                                  foundData[index].flatNo ?? '',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.cyan),
+                                ),
+                                children: [
+                                  Padding(
                                     padding: const EdgeInsets.all(10.0),
                                     child: Row(
                                       children: [
@@ -190,7 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
-                                              Divider(
+                                              const Divider(
                                                 thickness: 1,
                                               ),
                                               Detail(
@@ -199,7 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     foundData[index].flatNo ??
                                                         '',
                                               ),
-                                              Divider(thickness: 1),
+                                              const Divider(thickness: 1),
                                               Detail(
                                                 isperson: true,
                                                 iscall: true,
@@ -207,27 +220,25 @@ class _HomeScreenState extends State<HomeScreen> {
                                                         .contactNo ??
                                                     '',
                                               ),
-                                              Divider(thickness: 1),
+                                              const Divider(thickness: 1),
                                               Detail(
                                                 iscar: true,
                                                 detail:
-                                                    foundData[index].car ==
-                                                            null
+                                                    foundData[index].car == null
                                                         ? ""
                                                         : foundData[index]
                                                             .car!
                                                             .join('\n\n'),
                                               ),
-                                              Divider(thickness: 1),
+                                              const Divider(thickness: 1),
                                               Detail(
                                                 isbike: true,
-                                                detail:
-                                                    foundData[index].bike ==
-                                                            null
-                                                        ? ""
-                                                        : foundData[index]
-                                                            .bike!
-                                                            .join('\n\n'),
+                                                detail: foundData[index].bike ==
+                                                        null
+                                                    ? ""
+                                                    : foundData[index]
+                                                        .bike!
+                                                        .join('\n\n'),
                                               ),
                                             ],
                                           ),
@@ -235,160 +246,149 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ],
                                     ),
                                   ),
+                                ],
+                              ),
+                            );
+                          }),
+                    )),
+                  ],
+                ),
+              )
+            : Column(
+                children: [
+                  TextField(
+                    controller: textEditingController,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: "Search",
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: Colors.cyan,
+                      ),
+                    ),
+                    onChanged: (String val) => runFilter(val),
+                  ),
+                  const Divider(
+                    thickness: 2,
+                  ),
+                  Expanded(
+                      child: SingleChildScrollView(
+                    child: ListView.builder(
+                        physics: const BouncingScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: foundData.length,
+                        itemBuilder: (context, index) {
+                          return Card(
+                            child: ExpansionTile(
+                              leading: Padding(
+                                padding: const EdgeInsets.all(3.0),
+                                child: Stack(
+                                  children: [
+                                    const CircleAvatar(
+                                      radius: 30,
+                                      backgroundImage: AssetImage(
+                                          "asset/images/profile.png"),
+                                    ),
+                                    Positioned(
+                                        left: 38,
+                                        top: 32,
+                                        child: InkWell(
+                                          onTap: () {
+                                            editFlatNoController.text =
+                                                foundData[index].flatNo!;
+                                            editOwnerController.text =
+                                                foundData[index].ownerName!;
+                                            editContactController.text =
+                                                foundData[index].contactNo!;
+                                            _editData(context, index);
+                                          },
+                                          child: Container(
+                                              height: 18,
+                                              width: 18,
+                                              decoration: BoxDecoration(
+                                                  color: Colors.cyan,
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          20)),
+                                              child: const Icon(
+                                                Icons.edit,
+                                                size: 13,
+                                                color: Colors.white,
+                                              )),
+                                        ))
+                                  ],
+                                ),
+                              ),
+                              title: Text(
+                                foundData[index].ownerName ?? '',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text(
+                                foundData[index].flatNo ?? '',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.cyan),
+                              ),
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(10.0),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Divider(
+                                              thickness: 1,
+                                            ),
+                                            Detail(
+                                              ishome: true,
+                                              detail:
+                                                  foundData[index].flatNo ?? '',
+                                            ),
+                                            const Divider(thickness: 1),
+                                            Detail(
+                                              isperson: true,
+                                              iscall: true,
+                                              detail:
+                                                  foundData[index].contactNo ??
+                                                      '',
+                                            ),
+                                            const Divider(thickness: 1),
+                                            Detail(
+                                              iscar: true,
+                                              detail:
+                                                  foundData[index].car == null
+                                                      ? ""
+                                                      : foundData[index]
+                                                          .car!
+                                                          .join('\n\n'),
+                                            ),
+                                            const Divider(thickness: 1),
+                                            Detail(
+                                              isbike: true,
+                                              detail:
+                                                  foundData[index].bike == null
+                                                      ? ""
+                                                      : foundData[index]
+                                                          .bike!
+                                                          .join('\n\n'),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
                           );
                         }),
-                  ),
-                )),
-              ],
-            ),
-          ),
-        ):
-        Container(
-          child: Column(
-            children: [
-              TextField(
-                controller: textEditingController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: "Search",
-                  prefixIcon: Icon(
-                    Icons.search,
-                    color: Colors.cyan,
-                  ),
-                ),
-                onChanged: (String val) => runFilter(val),
-              ),
-              Divider(
-                thickness: 2,
-              ),
-              Expanded(
-                  child: SingleChildScrollView(
-                    child: Container(
-                      child: ListView.builder(
-                          physics: BouncingScrollPhysics(),
-                          shrinkWrap: true,
-                          itemCount: foundData.length,
-                          itemBuilder: (context, index) {
-                            return Card(
-                              child: ExpansionTile(
-                                leading: Padding(
-                                  padding: const EdgeInsets.all(3.0),
-                                  child: Stack(
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 30,
-                                        backgroundImage: AssetImage(
-                                            "asset/images/profile.png"),
-                                      ),
-                                      Positioned(
-                                          left: 38,
-                                          top: 32,
-                                          child: InkWell(
-                                            onTap: () {
-                                              editFlatNoController.text =
-                                              foundData[index].flatNo!;
-                                              editOwnerController.text =
-                                              foundData[index].ownerName!;
-                                              editContactController.text =
-                                              foundData[index].contactNo!;
-                                              _editData(context, index);
-                                            },
-                                            child: Container(
-                                                height: 18,
-                                                width: 18,
-                                                decoration: BoxDecoration(
-                                                    color: Colors.cyan,
-                                                    borderRadius:
-                                                    BorderRadius.circular(
-                                                        20)),
-                                                child: Icon(
-                                                  Icons.edit,
-                                                  size: 13,
-                                                  color: Colors.white,
-                                                )),
-                                          ))
-                                    ],
-                                  ),
-                                ),
-                                title: Text(
-                                  foundData[index].ownerName ?? '',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                subtitle: Text(
-                                  foundData[index].flatNo ?? '',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.cyan),
-                                ),
-                                children: [
-                                  Container(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(10.0),
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                              children: [
-                                                Divider(
-                                                  thickness: 1,
-                                                ),
-                                                Detail(
-                                                  ishome: true,
-                                                  detail:
-                                                  foundData[index].flatNo ??
-                                                      '',
-                                                ),
-                                                Divider(thickness: 1),
-                                                Detail(
-                                                  isperson: true,
-                                                  iscall: true,
-                                                  detail: foundData[index]
-                                                      .contactNo ??
-                                                      '',
-                                                ),
-                                                Divider(thickness: 1),
-                                                Detail(
-                                                  iscar: true,
-                                                  detail:
-                                                  foundData[index].car ==
-                                                      null
-                                                      ? ""
-                                                      : foundData[index]
-                                                      .car!
-                                                      .join('\n\n'),
-                                                ),
-                                                Divider(thickness: 1),
-                                                Detail(
-                                                  isbike: true,
-                                                  detail:
-                                                  foundData[index].bike ==
-                                                      null
-                                                      ? ""
-                                                      : foundData[index]
-                                                      .bike!
-                                                      .join('\n\n'),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }),
-                    ),
                   )),
-            ],
-          ),
-        ));
+                ],
+              ));
   }
 
   List<String> bikeNumber = [];
@@ -397,12 +397,10 @@ class _HomeScreenState extends State<HomeScreen> {
   _addData(BuildContext context) {
     showDialog(
         context: context,
-        builder: (
-          _,
-        ) {
+        builder: (_) {
           return StatefulBuilder(builder: (_, StateSetter setState) {
             return AlertDialog(
-              title: Text("Enter User Detail"),
+              title: const Text("Enter User Detail"),
               content: SingleChildScrollView(
                 child: Form(
                   autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -412,27 +410,37 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       TextFormField(
-                        textCapitalization: TextCapitalization.characters,
-                        controller: flatNoController,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(),
-                          hintText: "Flat NO",
-                          prefixIcon: Icon(
-                            Icons.home,
-                            color: Colors.cyan,
+                          textCapitalization: TextCapitalization.characters,
+                          controller: flatNoController,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            hintText: "Flat NO",
+                            prefixIcon: Icon(
+                              Icons.home,
+                              color: Colors.cyan,
+                            ),
                           ),
-                        ),
-                        validator: (val) {
-                          if (val!.isEmpty) {
-                            return "Enter flat no";
-                          }
-                        },
-                      ),
-                      Divider(),
+                          validator: (val) {
+                            Pattern pattern = r'^[A-Z]{1}\d{1}-\d{0,4}$';
+                            RegExp regex = RegExp(pattern.toString());
+                            if (val!.isEmpty) {
+                              return "Enter Flat No";
+                            } else if (!regex.hasMatch(val)) {
+                              return 'Enter This Format A1-1234';
+                            } else {
+                              for (int i = 1; i < flatList.length; i++) {
+                                if (flatList[i].flatNo == val) {
+                                  return "Already Exists";
+                                }
+                              }
+                            }
+                            return null;
+                          }),
+                      const Divider(),
                       TextFormField(
                         textCapitalization: TextCapitalization.words,
                         controller: ownerController,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           border: OutlineInputBorder(),
                           hintText: "Owner Name",
                           prefixIcon: Icon(
@@ -444,13 +452,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           if (val!.isEmpty) {
                             return "Enter Owner Name";
                           }
+                          return null;
                         },
                       ),
-                      Divider(),
+                      const Divider(),
                       TextFormField(
                         keyboardType: TextInputType.phone,
                         controller: contactController,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           border: OutlineInputBorder(),
                           hintText: "Contact NO",
                           prefixIcon: Icon(
@@ -463,33 +472,38 @@ class _HomeScreenState extends State<HomeScreen> {
                               r'(^(?:(?:\+|0{0,2})91(\s*[\ -]\s*)?|[0]?)?[456789]\d{9}|(\d[ -]?){10}\d$)';
 
                           RegExp regex = RegExp(pattern.toString());
-                          if ((!regex.hasMatch(val!))&&val.isNotEmpty) {
+                          if ((!regex.hasMatch(val!)) && val.isNotEmpty) {
                             return "Enter Valid Contact No";
-                          }
-                          else if(val.length > 16){
+                          } else if (val.length > 16) {
                             return "Enter Valid Contact No";
                           }
                           return null;
                         },
                       ),
-                      Divider(),
-                      Padding(
-                        padding: const EdgeInsets.all(2.0),
-                        child: Text("After entering the car number press +",style: TextStyle(fontSize: 10,fontWeight: FontWeight.bold,color: Colors.grey),),
+                      const Divider(),
+                      const Padding(
+                        padding: EdgeInsets.all(2.0),
+                        child: Text(
+                          "After entering the car number press +",
+                          style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey),
+                        ),
                       ),
                       TextFormField(
                         textCapitalization: TextCapitalization.characters,
                         controller: carController,
                         decoration: InputDecoration(
-                          border: OutlineInputBorder(),
+                          border: const OutlineInputBorder(),
                           hintText: "Enter Car Number",
-                          prefixIcon: Icon(
+                          prefixIcon: const Icon(
                             Icons.directions_car,
                             color: Colors.cyan,
                           ),
                           suffixIcon: isaCar
                               ? IconButton(
-                                  icon: Icon(
+                                  icon: const Icon(
                                     Icons.add,
                                     color: Colors.cyan,
                                   ),
@@ -503,7 +517,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   },
                                 )
                               : IconButton(
-                                  icon: Icon(
+                                  icon: const Icon(
                                     Icons.clear,
                                     color: Colors.black54,
                                   ),
@@ -539,90 +553,98 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       (carNumber.length <= 0)
                           ? Container()
-                          :Container(
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10)),
-                        height: 80,
-                        width: MediaQuery.of(context).size.width,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.vertical,
-                            child: Center(
-                              child: Wrap(
-                                runSpacing: 10,
-                                spacing: 10,
-                                direction: Axis.horizontal,
-                                children: carNumber
-                                    .map((e) => Container(
-                                        height: 25,
-                                        width: 100,
-                                        decoration: BoxDecoration(
-                                            color: Colors.cyan,
-                                            borderRadius:
-                                                BorderRadius.circular(20)),
-                                        child: Center(
-                                            child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              e.toString(),
-                                              style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 12),
-                                            ),
-                                            SizedBox(
-                                              width: 3,
-                                            ),
-                                            InkWell(
-                                                onTap: () {
-                                                  carNumber.removeWhere(
-                                                      (data) =>
-                                                          data.toString() ==
-                                                          e.toString());
-                                                  setState(() {});
-                                                },
-                                                child: Container(
-                                                  decoration: BoxDecoration(
-                                                      color: Colors.white,
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              20)),
-                                                  child: Icon(
-                                                    Icons.clear,
-                                                    color: Colors.red,
-                                                    size: 15,
+                          : Container(
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10)),
+                              height: 80,
+                              width: MediaQuery.of(context).size.width,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.vertical,
+                                  child: Center(
+                                    child: Wrap(
+                                      runSpacing: 10,
+                                      spacing: 10,
+                                      direction: Axis.horizontal,
+                                      children: carNumber
+                                          .map((e) => Container(
+                                              height: 25,
+                                              width: 100,
+                                              decoration: BoxDecoration(
+                                                  color: Colors.cyan,
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          20)),
+                                              child: Center(
+                                                  child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                    e.toString(),
+                                                    style: const TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 12),
                                                   ),
-                                                ))
-                                          ],
-                                        ))))
-                                    .toList(),
+                                                  const SizedBox(
+                                                    width: 3,
+                                                  ),
+                                                  InkWell(
+                                                      onTap: () {
+                                                        carNumber.removeWhere(
+                                                            (data) =>
+                                                                data.toString() ==
+                                                                e.toString());
+                                                        setState(() {});
+                                                      },
+                                                      child: Container(
+                                                        decoration: BoxDecoration(
+                                                            color: Colors.white,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        20)),
+                                                        child: const Icon(
+                                                          Icons.clear,
+                                                          color: Colors.red,
+                                                          size: 15,
+                                                        ),
+                                                      ))
+                                                ],
+                                              ))))
+                                          .toList(),
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                        ),
-                      ),
                       const SizedBox(
                         height: 5,
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(2.0),
-                        child: Text("After entering the Bike number press +",style: TextStyle(fontSize: 10,fontWeight: FontWeight.bold,color: Colors.grey),),
+                      const Padding(
+                        padding: EdgeInsets.all(2.0),
+                        child: Text(
+                          "After entering the Bike number press +",
+                          style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey),
+                        ),
                       ),
                       TextFormField(
                         textCapitalization: TextCapitalization.characters,
                         controller: bikeController,
                         decoration: InputDecoration(
-                          border: OutlineInputBorder(),
+                          border: const OutlineInputBorder(),
                           hintText: "Enter Bike Number",
-                          prefixIcon: Icon(
+                          prefixIcon: const Icon(
                             Icons.two_wheeler_outlined,
                             color: Colors.cyan,
                           ),
                           suffixIcon: isabike
                               ? IconButton(
-                                  icon: Icon(
+                                  icon: const Icon(
                                     Icons.add,
                                     color: Colors.cyan,
                                   ),
@@ -636,7 +658,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   },
                                 )
                               : IconButton(
-                                  icon: Icon(
+                                  icon: const Icon(
                                     Icons.clear,
                                     color: Colors.black54,
                                   ),
@@ -664,6 +686,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           if ((!regex.hasMatch(val!)) && val.isNotEmpty) {
                             return "Enter This Format GJ05AB1234";
                           }
+                          return null;
                           /*else if(bikeController.text == bikeNumber){
                           return "Enter Correct number";
                           }*/
@@ -674,70 +697,72 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       (bikeNumber.length <= 0)
                           ? Container()
-                          :Container(
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10)),
-                        height: 80,
-                        width: MediaQuery.of(context).size.width,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.vertical,
-                            child: Center(
-                              child: Wrap(
-                                runSpacing: 10,
-                                spacing: 10,
-                                direction: Axis.horizontal,
-                                children: bikeNumber
-                                    .map((e) => Container(
-                                        height: 25,
-                                        width: 100,
-                                        decoration: BoxDecoration(
-                                            color: Colors.cyan,
-                                            borderRadius:
-                                                BorderRadius.circular(20)),
-                                        child: Center(
-                                            child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              e.toString(),
-                                              style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 12),
-                                            ),
-                                            SizedBox(
-                                              width: 3,
-                                            ),
-                                            InkWell(
-                                                onTap: () {
-                                                  bikeNumber.removeWhere(
-                                                      (data) =>
-                                                          data.toString() ==
-                                                          e.toString());
-                                                  setState(() {});
-                                                },
-                                                child: Container(
-                                                  decoration: BoxDecoration(
-                                                      color: Colors.white,
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              20)),
-                                                  child: Icon(
-                                                    Icons.clear,
-                                                    color: Colors.red,
-                                                    size: 15,
+                          : Container(
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10)),
+                              height: 80,
+                              width: MediaQuery.of(context).size.width,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.vertical,
+                                  child: Center(
+                                    child: Wrap(
+                                      runSpacing: 10,
+                                      spacing: 10,
+                                      direction: Axis.horizontal,
+                                      children: bikeNumber
+                                          .map((e) => Container(
+                                              height: 25,
+                                              width: 100,
+                                              decoration: BoxDecoration(
+                                                  color: Colors.cyan,
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          20)),
+                                              child: Center(
+                                                  child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                    e.toString(),
+                                                    style: const TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 12),
                                                   ),
-                                                ))
-                                          ],
-                                        ))))
-                                    .toList(),
+                                                  const SizedBox(
+                                                    width: 3,
+                                                  ),
+                                                  InkWell(
+                                                      onTap: () {
+                                                        bikeNumber.removeWhere(
+                                                            (data) =>
+                                                                data.toString() ==
+                                                                e.toString());
+                                                        setState(() {});
+                                                      },
+                                                      child: Container(
+                                                        decoration: BoxDecoration(
+                                                            color: Colors.white,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        20)),
+                                                        child: const Icon(
+                                                          Icons.clear,
+                                                          color: Colors.red,
+                                                          size: 15,
+                                                        ),
+                                                      ))
+                                                ],
+                                              ))))
+                                          .toList(),
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        ),
-                      )
+                            )
                     ],
                   ),
                 ),
@@ -759,6 +784,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       side: const BorderSide(color: Colors.cyan)),
                   onPressed: () {
                     if (addFormKey.currentState!.validate()) {
+                      showLoading();
                       var createData = {
                         "FlatNo": flatNoController.text.toUpperCase(),
                         "ownerName": ownerController.text,
@@ -767,10 +793,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         "car": FieldValue.arrayUnion(carNumber),
                       };
                       reference.add(createData).whenComplete(() {
+                        hideLoading();
                         Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => HomeScreen(),
+                              builder: (context) => const HomeScreen(),
                             ),
                             (route) => false);
                       });
@@ -801,34 +828,37 @@ class _HomeScreenState extends State<HomeScreen> {
                   key: editFormKey,
                   autovalidateMode: AutovalidateMode.onUserInteraction,
                   child: Column(
-
                     //mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       TextFormField(
-                        textCapitalization: TextCapitalization.characters,
-                        controller: editFlatNoController,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(),
-                          hintText: "Flat NO",
-                          prefixIcon: Icon(
-                            Icons.home,
-                            color: Colors.cyan,
+                          textCapitalization: TextCapitalization.characters,
+                          controller: editFlatNoController,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            hintText: "Flat NO",
+                            prefixIcon: Icon(
+                              Icons.home,
+                              color: Colors.cyan,
+                            ),
                           ),
-                        ),
-                        validator: (val) {
-                          if (val!.isEmpty) {
-                            return "Enter flat no";
-                          }
-                        },
-                      ),
-                      SizedBox(
+                          validator: (val) {
+                            Pattern pattern = r'^[A-Z]{1}\d{1}-\d{0,4}$';
+                            RegExp regex = RegExp(pattern.toString());
+                            if (val!.isEmpty) {
+                              return "Enter Flat No";
+                            } else if (!regex.hasMatch(val)) {
+                              return 'Enter This Format A1-1234';
+                            }
+                            return null;
+                          }),
+                      const SizedBox(
                         height: 5,
                       ),
                       TextFormField(
                         textCapitalization: TextCapitalization.words,
                         controller: editOwnerController,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           border: OutlineInputBorder(),
                           hintText: "Owner Name",
                           prefixIcon: Icon(
@@ -840,14 +870,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           if (val!.isEmpty) {
                             return "Enter Owner Name";
                           }
+                          return null;
                         },
                       ),
-                      SizedBox(
+                      const SizedBox(
                         height: 5,
                       ),
                       TextFormField(
                         controller: editContactController,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           border: OutlineInputBorder(),
                           hintText: "Contact NO",
                           prefixIcon: Icon(
@@ -861,35 +892,40 @@ class _HomeScreenState extends State<HomeScreen> {
                               r'(^(?:(?:\+|0{0,2})91(\s*[\ -]\s*)?|[0]?)?[456789]\d{9}|(\d[ -]?){10}\d$)';
 
                           RegExp regex = RegExp(pattern.toString());
-                          if ((!regex.hasMatch(val!))&&val.isNotEmpty) {
+                          if ((!regex.hasMatch(val!)) && val.isNotEmpty) {
                             return "Enter Valid Contact No";
-                          }
-                          else if(val.length > 16){
+                          } else if (val.length > 16) {
                             return "Enter Valid Contact No";
                           }
                           return null;
                         },
                       ),
-                      SizedBox(
+                      const SizedBox(
                         height: 5,
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(2.0),
-                        child: Text("After entering the car number press +",style: TextStyle(fontSize: 10,fontWeight: FontWeight.bold,color: Colors.grey),),
+                      const Padding(
+                        padding: EdgeInsets.all(2.0),
+                        child: Text(
+                          "After entering the car number press +",
+                          style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey),
+                        ),
                       ),
                       TextFormField(
                         textCapitalization: TextCapitalization.characters,
                         controller: editCarController,
                         decoration: InputDecoration(
-                            border: OutlineInputBorder(),
+                            border: const OutlineInputBorder(),
                             hintText: "Enter Car Number",
-                            prefixIcon: Icon(
+                            prefixIcon: const Icon(
                               Icons.directions_car,
                               color: Colors.cyan,
                             ),
                             suffixIcon: isEcar
                                 ? IconButton(
-                                    icon: Icon(Icons.add),
+                                    icon: const Icon(Icons.add),
                                     onPressed: () {
                                       foundData[index].car!.add(
                                           editCarController.text.toUpperCase());
@@ -899,7 +935,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     },
                                   )
                                 : IconButton(
-                                    icon: Icon(
+                                    icon: const Icon(
                                       Icons.clear,
                                       color: Colors.black54,
                                     ),
@@ -926,9 +962,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           if ((!regex.hasMatch(val!)) && val.isNotEmpty) {
                             return "Enter This Format GJ05AB1234";
                           }
+                          return null;
                         },
                       ),
-                      SizedBox(
+                      const SizedBox(
                         height: 5,
                       ),
                       (foundData[index].car?.length ?? 0) <= 0
@@ -964,11 +1001,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 children: [
                                                   Text(
                                                     e.toString(),
-                                                    style: TextStyle(
+                                                    style: const TextStyle(
                                                         color: Colors.white,
                                                         fontSize: 12),
                                                   ),
-                                                  SizedBox(
+                                                  const SizedBox(
                                                     width: 3,
                                                   ),
                                                   InkWell(
@@ -987,7 +1024,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                 BorderRadius
                                                                     .circular(
                                                                         20)),
-                                                        child: Icon(
+                                                        child: const Icon(
                                                           Icons.clear,
                                                           color: Colors.red,
                                                           size: 15,
@@ -1001,26 +1038,32 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                             ),
-                      SizedBox(
+                      const SizedBox(
                         height: 5,
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(2.0),
-                        child: Text("After entering the Bike number press +",style: TextStyle(fontSize: 10,fontWeight: FontWeight.bold,color: Colors.grey),),
+                      const Padding(
+                        padding: EdgeInsets.all(2.0),
+                        child: Text(
+                          "After entering the Bike number press +",
+                          style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey),
+                        ),
                       ),
                       TextFormField(
                         textCapitalization: TextCapitalization.characters,
                         controller: editBikeController,
                         decoration: InputDecoration(
-                            border: OutlineInputBorder(),
+                            border: const OutlineInputBorder(),
                             hintText: "Enter Bike Number",
-                            prefixIcon: Icon(
+                            prefixIcon: const Icon(
                               Icons.two_wheeler_outlined,
                               color: Colors.cyan,
                             ),
                             suffixIcon: isEbike
                                 ? IconButton(
-                                    icon: Icon(
+                                    icon: const Icon(
                                       Icons.add,
                                       color: Colors.cyan,
                                     ),
@@ -1035,7 +1078,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     },
                                   )
                                 : IconButton(
-                                    icon: Icon(
+                                    icon: const Icon(
                                       Icons.clear,
                                       color: Colors.black54,
                                     ),
@@ -1062,9 +1105,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           if ((!regex.hasMatch(val!)) && val.isNotEmpty) {
                             return "Enter This Format GJ05AB1234";
                           }
+                          return null;
                         },
                       ),
-                      SizedBox(
+                      const SizedBox(
                         height: 5,
                       ),
                       (foundData[index].bike?.length ?? 0) <= 0
@@ -1100,11 +1144,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 children: [
                                                   Text(
                                                     e.toString(),
-                                                    style: TextStyle(
+                                                    style: const TextStyle(
                                                         color: Colors.white,
                                                         fontSize: 12),
                                                   ),
-                                                  SizedBox(
+                                                  const SizedBox(
                                                     width: 3,
                                                   ),
                                                   InkWell(
@@ -1123,7 +1167,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                 BorderRadius
                                                                     .circular(
                                                                         20)),
-                                                        child: Icon(
+                                                        child: const Icon(
                                                           Icons.clear,
                                                           color: Colors.red,
                                                           size: 15,
@@ -1158,6 +1202,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       side: const BorderSide(color: Colors.cyan)),
                   onPressed: () async {
                     if (editFormKey.currentState!.validate()) {
+                      showLoading();
                       final firestoreInstance = FirebaseFirestore.instance;
 
                       firestoreInstance
@@ -1184,13 +1229,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           .doc(foundData[index].uid)
                           .update(createData)
                           .whenComplete(() {
+                        hideLoading();
                         Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => HomeScreen()),
+                                builder: (context) => const HomeScreen()),
                             (route) => false);
-
-
                       });
                     }
 
@@ -1201,10 +1245,22 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(color: Colors.cyan),
                   ),
                 ),
-
               ],
             );
           });
         });
+  }
+
+  showLoading() {
+    return Get.dialog(
+        const Center(
+          child: CircularProgressIndicator(),
+        ),
+        barrierColor: Colors.transparent,
+        barrierDismissible: false);
+  }
+
+  hideLoading() {
+    if (Get.isDialogOpen!) Get.back();
   }
 }
