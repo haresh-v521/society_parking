@@ -110,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
           backgroundColor: Colors.cyan,
           title: const Text(
-            "Society Parking",
+            "Shivdhara Residency",
             style: TextStyle(color: Colors.white),
           ),
           centerTitle: true,
