@@ -39,7 +39,6 @@ dependencies:
   url_launcher:
   firebase_auth:
   shared_preferences:
-  firebase_analytics: ^11.4.1
   get:
 
 dev_dependencies:

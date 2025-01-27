@@ -182,99 +182,102 @@ class _HomeScreenState extends State<HomeScreen> {
                             return Card(
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               elevation: 3,
-                              child: ExpansionTile(
-                                leading: Stack(
+                              child: Theme(
+                                data:Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                                child: ExpansionTile(
+                                  leading: Stack(
+                                    children: [
+                                      const CircleAvatar(
+                                        radius: 30,
+                                        backgroundImage: AssetImage("asset/images/profile.png"),
+                                      ),
+                                      GetBuilder<LoginController>(
+                                        builder: (controller) {
+                                          return controller.isLogin
+                                              ? Positioned(
+                                                  left: 38,
+                                                  top: 30,
+                                                  child: InkWell(
+                                                    onTap: () {
+                                                      editFlatNoController.text =
+                                                          foundData[index].flatNo!;
+                                                      editOwnerController.text =
+                                                          foundData[index].ownerName!;
+                                                      editContactController.text =
+                                                          foundData[index].contactNo!;
+                                
+                                                      _editData(context, index);
+                                                    },
+                                                    child: Container(
+                                                        height: 18,
+                                                        width: 18,
+                                                        decoration: BoxDecoration(
+                                                            color: Colors.cyan,
+                                                            borderRadius: BorderRadius.circular(20)),
+                                                        child: const Icon(
+                                                          Icons.edit,
+                                                          size: 13,
+                                                          color: Colors.white,
+                                                        )),
+                                                  ))
+                                              : const SizedBox();
+                                        },
+                                      )
+                                    ],
+                                  ),
+                                  title: Text(
+                                    foundData[index].ownerName?.trim() ?? '',
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  subtitle: Text(
+                                    foundData[index].flatNo ?? '',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold, color: Colors.cyan),
+                                  ),
                                   children: [
-                                    const CircleAvatar(
-                                      radius: 30,
-                                      backgroundImage: AssetImage("asset/images/profile.png"),
+                                    Padding(
+                                      padding: const EdgeInsets.all(10.0),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const Divider(
+                                                  thickness: 1,
+                                                ),
+                                                Detail(
+                                                  ishome: true,
+                                                  detail: foundData[index].flatNo ?? '',
+                                                ),
+                                                const Divider(thickness: 1),
+                                                Detail(
+                                                  isperson: true,
+                                                  iscall: true,
+                                                  detail: foundData[index].contactNo ?? '',
+                                                ),
+                                                const Divider(thickness: 1),
+                                                Detail(
+                                                  iscar: true,
+                                                  detail: foundData[index].car == null
+                                                      ? ""
+                                                      : foundData[index].car!.join('\n\n'),
+                                                ),
+                                                const Divider(thickness: 1),
+                                                Detail(
+                                                  isbike: true,
+                                                  detail: foundData[index].bike == null
+                                                      ? ""
+                                                      : foundData[index].bike!.join('\n\n'),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                    GetBuilder<LoginController>(
-                                      builder: (controller) {
-                                        return controller.isLogin
-                                            ? Positioned(
-                                                left: 38,
-                                                top: 30,
-                                                child: InkWell(
-                                                  onTap: () {
-                                                    editFlatNoController.text =
-                                                        foundData[index].flatNo!;
-                                                    editOwnerController.text =
-                                                        foundData[index].ownerName!;
-                                                    editContactController.text =
-                                                        foundData[index].contactNo!;
-
-                                                    _editData(context, index);
-                                                  },
-                                                  child: Container(
-                                                      height: 18,
-                                                      width: 18,
-                                                      decoration: BoxDecoration(
-                                                          color: Colors.cyan,
-                                                          borderRadius: BorderRadius.circular(20)),
-                                                      child: const Icon(
-                                                        Icons.edit,
-                                                        size: 13,
-                                                        color: Colors.white,
-                                                      )),
-                                                ))
-                                            : const SizedBox();
-                                      },
-                                    )
                                   ],
                                 ),
-                                title: Text(
-                                  foundData[index].ownerName ?? '',
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                subtitle: Text(
-                                  foundData[index].flatNo ?? '',
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold, color: Colors.cyan),
-                                ),
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(10.0),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              const Divider(
-                                                thickness: 1,
-                                              ),
-                                              Detail(
-                                                ishome: true,
-                                                detail: foundData[index].flatNo ?? '',
-                                              ),
-                                              const Divider(thickness: 1),
-                                              Detail(
-                                                isperson: true,
-                                                iscall: true,
-                                                detail: foundData[index].contactNo ?? '',
-                                              ),
-                                              const Divider(thickness: 1),
-                                              Detail(
-                                                iscar: true,
-                                                detail: foundData[index].car == null
-                                                    ? ""
-                                                    : foundData[index].car!.join('\n\n'),
-                                              ),
-                                              const Divider(thickness: 1),
-                                              Detail(
-                                                isbike: true,
-                                                detail: foundData[index].bike == null
-                                                    ? ""
-                                                    : foundData[index].bike!.join('\n\n'),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
                               ),
                             );
                           }),
