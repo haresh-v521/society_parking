@@ -138,27 +138,39 @@ class _HomeScreenState extends State<HomeScreen> {
             style: TextStyle(color: Colors.white),
           ),
           centerTitle: true,
-          elevation: 0,
+          elevation: 3,
         ),
         body: kIsWeb
             ? Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    TextField(
-                      controller: textEditingController,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: "Search",
-                        prefixIcon: Icon(
-                          Icons.search,
-                          color: Colors.cyan,
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey,
+                            blurRadius: 2,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        onChanged: (String val) => runFilter(val),
+                        decoration: InputDecoration(
+                          hintText: 'Search here..',
+                          prefixIcon: Icon(Icons.search, color: Colors.cyan),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(vertical: 15),
                         ),
                       ),
-                      onChanged: (String val) => runFilter(val),
-                    ),
+                    )
+                    ,
                     const Divider(
                       thickness: 2,
+                      color: Colors.grey,
                     ),
                     Expanded(
                         child: SingleChildScrollView(
@@ -168,6 +180,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           itemCount: foundData.length,
                           itemBuilder: (context, index) {
                             return Card(
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              elevation: 3,
                               child: ExpansionTile(
                                 leading: Stack(
                                   children: [
@@ -268,7 +282,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               )
-            : Column(
+
+      : Column(
                 children: [
                   TextField(
                     controller: textEditingController,
