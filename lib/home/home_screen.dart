@@ -1,8 +1,12 @@
 import 'dart:core';
-import 'package:flutter/foundation.dart' show kIsWeb;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:society_parking/constant.dart';
+import 'package:society_parking/user_controller/login_controller.dart';
+
 import '../models/user_model.dart';
 import '../user_controller/user_controller.dart';
 import 'detail.dart';
@@ -15,9 +19,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final CollectionReference reference =
-      FirebaseFirestore.instance.collection('vehicle');
-
   TextEditingController flatNoController = TextEditingController();
   TextEditingController ownerController = TextEditingController();
   TextEditingController contactController = TextEditingController();
@@ -43,6 +44,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isaCar = false;
   bool isEcar = false;
   bool isEbike = false;
+
+  LoginController loginController = Get.put(LoginController());
 
   @override
   void initState() {
@@ -82,14 +85,8 @@ class _HomeScreenState extends State<HomeScreen> {
           .where((user) =>
               user.ownerName!.toLowerCase().contains(enterVal.toLowerCase()) ||
               user.contactNo!.toLowerCase().contains(enterVal.toLowerCase()) ||
-              user.car
-                  .toString()
-                  .toLowerCase()
-                  .contains(enterVal.toLowerCase()) ||
-              user.bike
-                  .toString()
-                  .toLowerCase()
-                  .contains(enterVal.toLowerCase()) ||
+              user.car.toString().toLowerCase().contains(enterVal.toLowerCase()) ||
+              user.bike.toString().toLowerCase().contains(enterVal.toLowerCase()) ||
               user.flatNo!.toLowerCase().contains(enterVal.toLowerCase()))
           .toList();
     }
@@ -101,12 +98,39 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
         appBar: AppBar(
           actions: [
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: () {
-                _addData(context);
+            GetBuilder<LoginController>(
+              builder: (controller) {
+                return controller.isLogin
+                    ? Padding(
+                        padding: const EdgeInsets.only(right: 7),
+                        child: InkWell(
+                          onTap: () {
+                            _addData(context);
+                          },
+                          radius: 15,
+                          borderRadius: BorderRadius.circular(15),
+                          child: const CircleAvatar(
+                            radius: 15,
+                            backgroundColor: Colors.white,
+                            child: Center(
+                              child: Icon(Icons.add, color: Colors.cyan),
+                            ),
+                          ),
+                        ))
+                    : Padding(
+                        padding: const EdgeInsets.only(right: 7),
+                        child: ElevatedButton(
+                            onPressed: () {
+                              _showAuthDialog(context);
+                            },
+                            style: ElevatedButton.styleFrom(),
+                            child: const Text(
+                              'Login',
+                              style: TextStyle(color: Colors.cyan),
+                            )),
+                      );
               },
-            ),
+            )
           ],
           backgroundColor: Colors.cyan,
           title: const Text(
@@ -149,49 +173,50 @@ class _HomeScreenState extends State<HomeScreen> {
                                   children: [
                                     const CircleAvatar(
                                       radius: 30,
-                                      backgroundImage: AssetImage(
-                                          "asset/images/profile.png"),
+                                      backgroundImage: AssetImage("asset/images/profile.png"),
                                     ),
-                                    Positioned(
-                                        left: 38,
-                                        top: 30,
-                                        child: InkWell(
-                                          onTap: () {
-                                            editFlatNoController.text =
-                                                foundData[index].flatNo!;
-                                            editOwnerController.text =
-                                                foundData[index].ownerName!;
-                                            editContactController.text =
-                                                foundData[index].contactNo!;
+                                    GetBuilder<LoginController>(
+                                      builder: (controller) {
+                                        return controller.isLogin
+                                            ? Positioned(
+                                                left: 38,
+                                                top: 30,
+                                                child: InkWell(
+                                                  onTap: () {
+                                                    editFlatNoController.text =
+                                                        foundData[index].flatNo!;
+                                                    editOwnerController.text =
+                                                        foundData[index].ownerName!;
+                                                    editContactController.text =
+                                                        foundData[index].contactNo!;
 
-                                            _editData(context, index);
-                                          },
-                                          child: Container(
-                                              height: 18,
-                                              width: 18,
-                                              decoration: BoxDecoration(
-                                                  color: Colors.cyan,
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          20)),
-                                              child: const Icon(
-                                                Icons.edit,
-                                                size: 13,
-                                                color: Colors.white,
-                                              )),
-                                        ))
+                                                    _editData(context, index);
+                                                  },
+                                                  child: Container(
+                                                      height: 18,
+                                                      width: 18,
+                                                      decoration: BoxDecoration(
+                                                          color: Colors.cyan,
+                                                          borderRadius: BorderRadius.circular(20)),
+                                                      child: const Icon(
+                                                        Icons.edit,
+                                                        size: 13,
+                                                        color: Colors.white,
+                                                      )),
+                                                ))
+                                            : const SizedBox();
+                                      },
+                                    )
                                   ],
                                 ),
                                 title: Text(
                                   foundData[index].ownerName ?? '',
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold),
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 subtitle: Text(
                                   foundData[index].flatNo ?? '',
                                   style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.cyan),
+                                      fontWeight: FontWeight.bold, color: Colors.cyan),
                                 ),
                                 children: [
                                   Padding(
@@ -200,45 +225,34 @@ class _HomeScreenState extends State<HomeScreen> {
                                       children: [
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
                                               const Divider(
                                                 thickness: 1,
                                               ),
                                               Detail(
                                                 ishome: true,
-                                                detail:
-                                                    foundData[index].flatNo ??
-                                                        '',
+                                                detail: foundData[index].flatNo ?? '',
                                               ),
                                               const Divider(thickness: 1),
                                               Detail(
                                                 isperson: true,
                                                 iscall: true,
-                                                detail: foundData[index]
-                                                        .contactNo ??
-                                                    '',
+                                                detail: foundData[index].contactNo ?? '',
                                               ),
                                               const Divider(thickness: 1),
                                               Detail(
                                                 iscar: true,
-                                                detail:
-                                                    foundData[index].car == null
-                                                        ? ""
-                                                        : foundData[index]
-                                                            .car!
-                                                            .join('\n\n'),
+                                                detail: foundData[index].car == null
+                                                    ? ""
+                                                    : foundData[index].car!.join('\n\n'),
                                               ),
                                               const Divider(thickness: 1),
                                               Detail(
                                                 isbike: true,
-                                                detail: foundData[index].bike ==
-                                                        null
+                                                detail: foundData[index].bike == null
                                                     ? ""
-                                                    : foundData[index]
-                                                        .bike!
-                                                        .join('\n\n'),
+                                                    : foundData[index].bike!.join('\n\n'),
                                               ),
                                             ],
                                           ),
@@ -286,18 +300,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                   children: [
                                     const CircleAvatar(
                                       radius: 30,
-                                      backgroundImage: AssetImage(
-                                          "asset/images/profile.png"),
+                                      backgroundImage: AssetImage("asset/images/profile.png"),
                                     ),
                                     Positioned(
                                         left: 38,
                                         top: 32,
                                         child: InkWell(
                                           onTap: () {
-                                            editFlatNoController.text =
-                                                foundData[index].flatNo!;
-                                            editOwnerController.text =
-                                                foundData[index].ownerName!;
+                                            editFlatNoController.text = foundData[index].flatNo!;
+                                            editOwnerController.text = foundData[index].ownerName!;
                                             editContactController.text =
                                                 foundData[index].contactNo!;
                                             _editData(context, index);
@@ -307,9 +318,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                               width: 18,
                                               decoration: BoxDecoration(
                                                   color: Colors.cyan,
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          20)),
+                                                  borderRadius: BorderRadius.circular(20)),
                                               child: const Icon(
                                                 Icons.edit,
                                                 size: 13,
@@ -321,14 +330,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               title: Text(
                                 foundData[index].ownerName ?? '',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
+                                style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
                               subtitle: Text(
                                 foundData[index].flatNo ?? '',
                                 style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.cyan),
+                                    fontWeight: FontWeight.bold, color: Colors.cyan),
                               ),
                               children: [
                                 Padding(
@@ -337,44 +344,34 @@ class _HomeScreenState extends State<HomeScreen> {
                                     children: [
                                       Expanded(
                                         child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             const Divider(
                                               thickness: 1,
                                             ),
                                             Detail(
                                               ishome: true,
-                                              detail:
-                                                  foundData[index].flatNo ?? '',
+                                              detail: foundData[index].flatNo ?? '',
                                             ),
                                             const Divider(thickness: 1),
                                             Detail(
                                               isperson: true,
                                               iscall: true,
-                                              detail:
-                                                  foundData[index].contactNo ??
-                                                      '',
+                                              detail: foundData[index].contactNo ?? '',
                                             ),
                                             const Divider(thickness: 1),
                                             Detail(
                                               iscar: true,
-                                              detail:
-                                                  foundData[index].car == null
-                                                      ? ""
-                                                      : foundData[index]
-                                                          .car!
-                                                          .join('\n\n'),
+                                              detail: foundData[index].car == null
+                                                  ? ""
+                                                  : foundData[index].car!.join('\n\n'),
                                             ),
                                             const Divider(thickness: 1),
                                             Detail(
                                               isbike: true,
-                                              detail:
-                                                  foundData[index].bike == null
-                                                      ? ""
-                                                      : foundData[index]
-                                                          .bike!
-                                                          .join('\n\n'),
+                                              detail: foundData[index].bike == null
+                                                  ? ""
+                                                  : foundData[index].bike!.join('\n\n'),
                                             ),
                                           ],
                                         ),
@@ -486,9 +483,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Text(
                           "After entering the car number press +",
                           style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey),
+                              fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey),
                         ),
                       ),
                       TextFormField(
@@ -509,8 +504,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   onPressed: () {
                                     setState(() {
-                                      carNumber.add(
-                                          carController.text.toUpperCase());
+                                      carNumber.add(carController.text.toUpperCase());
                                       carController.clear();
                                       isaCar = false;
                                     });
@@ -527,19 +521,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                         ),
                         onChanged: (val) {
-                          Pattern pattern =
-                              r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
+                          Pattern pattern = r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
 
                           RegExp regex = RegExp(pattern.toString());
                           setState(() {
-                            (regex.hasMatch(val))
-                                ? isaCar = true
-                                : isaCar = false;
+                            (regex.hasMatch(val)) ? isaCar = true : isaCar = false;
                           });
                         },
                         validator: (val) {
-                          Pattern pattern =
-                              r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
+                          Pattern pattern = r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
 
                           RegExp regex = RegExp(pattern.toString());
                           if ((!regex.hasMatch(val!)) && val.isNotEmpty) {
@@ -554,8 +544,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       (carNumber.length <= 0)
                           ? Container()
                           : Container(
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10)),
+                              decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
                               height: 80,
                               width: MediaQuery.of(context).size.width,
                               child: Padding(
@@ -573,38 +562,30 @@ class _HomeScreenState extends State<HomeScreen> {
                                               width: 100,
                                               decoration: BoxDecoration(
                                                   color: Colors.cyan,
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          20)),
+                                                  borderRadius: BorderRadius.circular(20)),
                                               child: Center(
                                                   child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
+                                                mainAxisAlignment: MainAxisAlignment.center,
                                                 children: [
                                                   Text(
                                                     e.toString(),
                                                     style: const TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize: 12),
+                                                        color: Colors.white, fontSize: 12),
                                                   ),
                                                   const SizedBox(
                                                     width: 3,
                                                   ),
                                                   InkWell(
                                                       onTap: () {
-                                                        carNumber.removeWhere(
-                                                            (data) =>
-                                                                data.toString() ==
-                                                                e.toString());
+                                                        carNumber.removeWhere((data) =>
+                                                            data.toString() == e.toString());
                                                         setState(() {});
                                                       },
                                                       child: Container(
                                                         decoration: BoxDecoration(
                                                             color: Colors.white,
                                                             borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        20)),
+                                                                BorderRadius.circular(20)),
                                                         child: const Icon(
                                                           Icons.clear,
                                                           color: Colors.red,
@@ -627,9 +608,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Text(
                           "After entering the Bike number press +",
                           style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey),
+                              fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey),
                         ),
                       ),
                       TextFormField(
@@ -650,8 +629,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   onPressed: () {
                                     setState(() {
-                                      bikeNumber.add(
-                                          bikeController.text.toUpperCase());
+                                      bikeNumber.add(bikeController.text.toUpperCase());
                                       bikeController.clear();
                                       isabike = false;
                                     });
@@ -668,19 +646,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                         ),
                         onChanged: (val) {
-                          Pattern pattern =
-                              r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
+                          Pattern pattern = r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
 
                           RegExp regex = RegExp(pattern.toString());
                           setState(() {
-                            (regex.hasMatch(val))
-                                ? isabike = true
-                                : isabike = false;
+                            (regex.hasMatch(val)) ? isabike = true : isabike = false;
                           });
                         },
                         validator: (val) {
-                          Pattern pattern =
-                              r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
+                          Pattern pattern = r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
 
                           RegExp regex = RegExp(pattern.toString());
                           if ((!regex.hasMatch(val!)) && val.isNotEmpty) {
@@ -698,8 +672,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       (bikeNumber.length <= 0)
                           ? Container()
                           : Container(
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10)),
+                              decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
                               height: 80,
                               width: MediaQuery.of(context).size.width,
                               child: Padding(
@@ -717,38 +690,30 @@ class _HomeScreenState extends State<HomeScreen> {
                                               width: 100,
                                               decoration: BoxDecoration(
                                                   color: Colors.cyan,
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          20)),
+                                                  borderRadius: BorderRadius.circular(20)),
                                               child: Center(
                                                   child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
+                                                mainAxisAlignment: MainAxisAlignment.center,
                                                 children: [
                                                   Text(
                                                     e.toString(),
                                                     style: const TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize: 12),
+                                                        color: Colors.white, fontSize: 12),
                                                   ),
                                                   const SizedBox(
                                                     width: 3,
                                                   ),
                                                   InkWell(
                                                       onTap: () {
-                                                        bikeNumber.removeWhere(
-                                                            (data) =>
-                                                                data.toString() ==
-                                                                e.toString());
+                                                        bikeNumber.removeWhere((data) =>
+                                                            data.toString() == e.toString());
                                                         setState(() {});
                                                       },
                                                       child: Container(
                                                         decoration: BoxDecoration(
                                                             color: Colors.white,
                                                             borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        20)),
+                                                                BorderRadius.circular(20)),
                                                         child: const Icon(
                                                           Icons.clear,
                                                           color: Colors.red,
@@ -769,19 +734,17 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               actions: [
                 TextButton(
-                  style: TextButton.styleFrom(
-                      side: const BorderSide(color: Colors.red)),
+                  style: TextButton.styleFrom(side: const BorderSide(color: Colors.red)),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
                   child: const Text(
-                    "Cancle",
+                    "Cancel",
                     style: TextStyle(color: Colors.red),
                   ),
                 ),
                 TextButton(
-                  style: TextButton.styleFrom(
-                      side: const BorderSide(color: Colors.cyan)),
+                  style: TextButton.styleFrom(side: const BorderSide(color: Colors.cyan)),
                   onPressed: () {
                     if (addFormKey.currentState!.validate()) {
                       showLoading();
@@ -908,9 +871,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Text(
                           "After entering the car number press +",
                           style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey),
+                              fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey),
                         ),
                       ),
                       TextFormField(
@@ -927,8 +888,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ? IconButton(
                                     icon: const Icon(Icons.add),
                                     onPressed: () {
-                                      foundData[index].car!.add(
-                                          editCarController.text.toUpperCase());
+                                      foundData[index]
+                                          .car!
+                                          .add(editCarController.text.toUpperCase());
                                       editCarController.clear();
                                       isEcar = false;
                                       setState(() {});
@@ -944,19 +906,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                     },
                                   )),
                         onChanged: (val) {
-                          Pattern pattern =
-                              r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
+                          Pattern pattern = r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
 
                           RegExp regex = RegExp(pattern.toString());
                           setState(() {
-                            (regex.hasMatch(val))
-                                ? isEcar = true
-                                : isEcar = false;
+                            (regex.hasMatch(val)) ? isEcar = true : isEcar = false;
                           });
                         },
                         validator: (val) {
-                          Pattern pattern =
-                              r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
+                          Pattern pattern = r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
 
                           RegExp regex = RegExp(pattern.toString());
                           if ((!regex.hasMatch(val!)) && val.isNotEmpty) {
@@ -971,8 +929,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       (foundData[index].car?.length ?? 0) <= 0
                           ? Container()
                           : Container(
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10)),
+                              decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
                               height: 80,
                               width: MediaQuery.of(context).size.width,
                               child: Padding(
@@ -991,39 +948,30 @@ class _HomeScreenState extends State<HomeScreen> {
                                               width: 100,
                                               decoration: BoxDecoration(
                                                   color: Colors.cyan,
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          20)),
+                                                  borderRadius: BorderRadius.circular(20)),
                                               child: Center(
                                                   child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
+                                                mainAxisAlignment: MainAxisAlignment.center,
                                                 children: [
                                                   Text(
                                                     e.toString(),
                                                     style: const TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize: 12),
+                                                        color: Colors.white, fontSize: 12),
                                                   ),
                                                   const SizedBox(
                                                     width: 3,
                                                   ),
                                                   InkWell(
                                                       onTap: () {
-                                                        foundData[index]
-                                                            .car!
-                                                            .removeWhere((data) =>
-                                                                data.toString() ==
-                                                                e.toString());
+                                                        foundData[index].car!.removeWhere((data) =>
+                                                            data.toString() == e.toString());
                                                         setState(() {});
                                                       },
                                                       child: Container(
                                                         decoration: BoxDecoration(
                                                             color: Colors.white,
                                                             borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        20)),
+                                                                BorderRadius.circular(20)),
                                                         child: const Icon(
                                                           Icons.clear,
                                                           color: Colors.red,
@@ -1046,9 +994,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Text(
                           "After entering the Bike number press +",
                           style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey),
+                              fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey),
                         ),
                       ),
                       TextFormField(
@@ -1069,9 +1015,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                     onPressed: () {
                                       setState(() {
-                                        foundData[index].bike!.add(
-                                            editBikeController.text
-                                                .toUpperCase());
+                                        foundData[index]
+                                            .bike!
+                                            .add(editBikeController.text.toUpperCase());
                                         editBikeController.clear();
                                         isEbike = false;
                                       });
@@ -1087,19 +1033,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                     },
                                   )),
                         onChanged: (val) {
-                          Pattern pattern =
-                              r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
+                          Pattern pattern = r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
 
                           RegExp regex = RegExp(pattern.toString());
                           setState(() {
-                            (regex.hasMatch(val))
-                                ? isEbike = true
-                                : isEbike = false;
+                            (regex.hasMatch(val)) ? isEbike = true : isEbike = false;
                           });
                         },
                         validator: (val) {
-                          Pattern pattern =
-                              r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
+                          Pattern pattern = r'(^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{3,4}$)';
 
                           RegExp regex = RegExp(pattern.toString());
                           if ((!regex.hasMatch(val!)) && val.isNotEmpty) {
@@ -1114,8 +1056,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       (foundData[index].bike?.length ?? 0) <= 0
                           ? Container()
                           : Container(
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10)),
+                              decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
                               height: 80,
                               width: MediaQuery.of(context).size.width,
                               child: Padding(
@@ -1134,39 +1075,30 @@ class _HomeScreenState extends State<HomeScreen> {
                                               width: 100,
                                               decoration: BoxDecoration(
                                                   color: Colors.cyan,
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          20)),
+                                                  borderRadius: BorderRadius.circular(20)),
                                               child: Center(
                                                   child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
+                                                mainAxisAlignment: MainAxisAlignment.center,
                                                 children: [
                                                   Text(
                                                     e.toString(),
                                                     style: const TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize: 12),
+                                                        color: Colors.white, fontSize: 12),
                                                   ),
                                                   const SizedBox(
                                                     width: 3,
                                                   ),
                                                   InkWell(
                                                       onTap: () {
-                                                        foundData[index]
-                                                            .bike!
-                                                            .removeWhere((data) =>
-                                                                data.toString() ==
-                                                                e.toString());
+                                                        foundData[index].bike!.removeWhere((data) =>
+                                                            data.toString() == e.toString());
                                                         setState(() {});
                                                       },
                                                       child: Container(
                                                         decoration: BoxDecoration(
                                                             color: Colors.white,
                                                             borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        20)),
+                                                                BorderRadius.circular(20)),
                                                         child: const Icon(
                                                           Icons.clear,
                                                           color: Colors.red,
@@ -1187,31 +1119,24 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               actions: [
                 TextButton(
-                  style: TextButton.styleFrom(
-                      side: const BorderSide(color: Colors.red)),
+                  style: TextButton.styleFrom(side: const BorderSide(color: Colors.red)),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
                   child: const Text(
-                    "Cancle",
+                    "Cancel",
                     style: TextStyle(color: Colors.red),
                   ),
                 ),
                 TextButton(
-                  style: TextButton.styleFrom(
-                      side: const BorderSide(color: Colors.cyan)),
+                  style: TextButton.styleFrom(side: const BorderSide(color: Colors.cyan)),
                   onPressed: () async {
                     if (editFormKey.currentState!.validate()) {
                       showLoading();
-                      final firestoreInstance = FirebaseFirestore.instance;
 
-                      firestoreInstance
-                          .collection("vehicle")
+                      reference
                           .doc(foundData[index].uid)
-                          .update({
-                        'car': FieldValue.delete(),
-                        'bike': FieldValue.delete()
-                      });
+                          .update({'car': FieldValue.delete(), 'bike': FieldValue.delete()});
                       var createData = {
                         "FlatNo": editFlatNoController.text.toUpperCase(),
                         "ownerName": editOwnerController.text,
@@ -1224,16 +1149,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             : FieldValue.arrayUnion(foundData[index].bike!),
                       };
 
-                      firestoreInstance
-                          .collection("vehicle")
-                          .doc(foundData[index].uid)
-                          .update(createData)
-                          .whenComplete(() {
+                      reference.doc(foundData[index].uid).update(createData).whenComplete(() {
                         hideLoading();
                         Navigator.pushAndRemoveUntil(
                             context,
-                            MaterialPageRoute(
-                                builder: (context) => const HomeScreen()),
+                            MaterialPageRoute(builder: (context) => const HomeScreen()),
                             (route) => false);
                       });
                     }
@@ -1262,5 +1182,114 @@ class _HomeScreenState extends State<HomeScreen> {
 
   hideLoading() {
     if (Get.isDialogOpen!) Get.back();
+  }
+
+  void _showAuthDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const AlertDialog(
+        title: Text(
+          'Login',
+          style: TextStyle(color: Colors.cyan),
+        ),
+        content: AuthForm(),
+      ),
+    );
+  }
+}
+
+class AuthForm extends StatefulWidget {
+  const AuthForm({Key? key}) : super(key: key);
+
+  @override
+  _AuthFormState createState() => _AuthFormState();
+}
+
+class _AuthFormState extends State<AuthForm> {
+  final _formKey = GlobalKey<FormState>();
+
+  LoginController loginController = Get.put(LoginController());
+
+  @override
+  Widget build(BuildContext context) {
+    return GetBuilder<LoginController>(
+      builder: (controller) {
+        return Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: controller.emailController,
+                decoration: const InputDecoration(labelText: 'Email'),
+                keyboardType: TextInputType.emailAddress,
+                validator: _validateEmail,
+              ),
+              TextFormField(
+                controller: controller.passwordController,
+                decoration: const InputDecoration(labelText: 'Password'),
+                obscureText: true,
+                validator: _validatePassword,
+              ),
+              const SizedBox(height: 16),
+              if (controller.errorMessage != null)
+                Text(
+                  controller.errorMessage!,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              const SizedBox(height: 16),
+              controller.isLoading
+                  ? const SizedBox(
+                      width: 30,
+                      height: 30,
+                      child: Center(
+                          child: CircularProgressIndicator(
+                        color: Colors.cyan,
+                      )),
+                    )
+                  : ElevatedButton(
+                      onPressed: () async {
+                        if (_formKey.currentState!.validate()) {
+                          bool isLogin = await controller.login();
+                          if (isLogin) {
+                            Get.back();
+                            showSnackBar(context: context, title: 'Login SuccessFully');
+                            controller.setLogin(value: true);
+                          } else {
+                            controller.setLogin(value: false);
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.cyan),
+                      child: const Text(
+                        'Login',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Email is required';
+    }
+
+    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+
+    if (!emailRegex.hasMatch(value)) {
+      return 'Enter a valid email address';
+    }
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Password is required';
+    }
+    return null;
   }
 }
