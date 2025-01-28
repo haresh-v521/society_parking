@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../user_controller/user_controller.dart';
+import 'package:society_parking/controller/user_controller/user_controller.dart';
 
 class Detail extends StatelessWidget {
      const Detail(

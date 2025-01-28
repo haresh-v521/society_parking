@@ -5,10 +5,11 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:society_parking/constant.dart';
-import 'package:society_parking/user_controller/login_controller.dart';
+import 'package:society_parking/controller/Home_controller.dart';
+import 'package:society_parking/controller/user_controller/login_controller.dart';
+import 'package:society_parking/controller/user_controller/user_controller.dart';
+import 'package:society_parking/models/user_model.dart';
 
-import '../models/user_model.dart';
-import '../user_controller/user_controller.dart';
 import 'detail.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -39,6 +40,8 @@ class _HomeScreenState extends State<HomeScreen> {
   List<UserData> userAllData = [];
   List<UserData> foundData = [];
   List<UserData> flatList = [];
+  int totalBike = 0;
+  int totalCar = 0;
 
   bool isabike = false;
   bool isaCar = false;
@@ -46,6 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isEbike = false;
 
   LoginController loginController = Get.put(LoginController());
+  HomeController homeController = Get.put(HomeController());
 
   @override
   void initState() {
@@ -56,10 +60,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   fetchData() async {
     dynamic result = await UserController().getUserList();
+
     setState(() {
       userAllData = result;
       foundData.addAll(userAllData);
     });
+    for (var element in foundData) {
+      totalBike += element.bike?.length ?? 0;
+      totalCar += element.car?.length ?? 0;
+    }
     foundData.sort((a, b) => a.flatNo!.compareTo(b.flatNo!));
   }
 
@@ -93,63 +102,73 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {});
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        floatingActionButton: GetBuilder<LoginController>(
+          builder: (controller) {
+            return controller.isLogin
+                ? InkWell(
+                    onTap: () {
+                      _addData(context);
+                    },
+                    radius: 23,
+                    borderRadius: BorderRadius.circular(15),
+                    child: const CircleAvatar(
+                      radius: 23,
+                      backgroundColor: Colors.cyan,
+                      child: Center(
+                        child: Icon(Icons.add, color: Colors.white),
+                      ),
+                    ),
+                  )
+                : ElevatedButton(
+                    onPressed: () {
+                      _showAuthDialog(context);
+                    },
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.cyan),
+                    child: const Text(
+                      'Login',
+                      style: TextStyle(color: Colors.white),
+                    ));
+          },
+        ),
         appBar: AppBar(
           actions: [
-            GetBuilder<LoginController>(
-              builder: (controller) {
-                return controller.isLogin
-                    ? Padding(
-                        padding: const EdgeInsets.only(right: 7),
-                        child: InkWell(
-                          onTap: () {
-                            _addData(context);
-                          },
-                          radius: 15,
-                          borderRadius: BorderRadius.circular(15),
-                          child: const CircleAvatar(
-                            radius: 15,
-                            backgroundColor: Colors.white,
-                            child: Center(
-                              child: Icon(Icons.add, color: Colors.cyan),
-                            ),
-                          ),
-                        ))
-                    : Padding(
-                        padding: const EdgeInsets.only(right: 7),
-                        child: ElevatedButton(
-                            onPressed: () {
-                              _showAuthDialog(context);
-                            },
-                            style: ElevatedButton.styleFrom(),
-                            child: const Text(
-                              'Login',
-                              style: TextStyle(color: Colors.cyan),
-                            )),
-                      );
-              },
+            Padding(
+              padding: const EdgeInsets.only(right: 15.0),
+              child: InkWell(
+                onTap: () {
+                  homeController.setSearchOptions();
+                },
+                borderRadius: BorderRadius.circular(30),
+                radius: 30,
+                child: GetBuilder<HomeController>(
+                  builder: (controller) {
+                    return Container(
+                      height: 35,
+                      width: 35,
+                      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                      child: Center(
+                        child: Icon(controller.isSearch ? Icons.close : Icons.search,
+                            color: Colors.cyan),
+                      ),
+                    );
+                  },
+                ),
+              ),
             )
           ],
           backgroundColor: Colors.cyan,
-          title: const Text(
-            "Shivdhara Residency",
-            style: TextStyle(color: Colors.white),
-          ),
-          centerTitle: true,
-          elevation: 3,
-        ),
-        body: kIsWeb
-            ? Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Container(
+          title: GetBuilder<HomeController>(
+            builder: (controller) {
+              return controller.isSearch
+                  ? Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
+                        boxShadow: const [
                           BoxShadow(
                             color: Colors.grey,
                             blurRadius: 2,
@@ -159,17 +178,42 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       child: TextField(
                         onChanged: (String val) => runFilter(val),
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
+                          isCollapsed: true,
                           hintText: 'Search here..',
                           prefixIcon: Icon(Icons.search, color: Colors.cyan),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 15),
+                          contentPadding: EdgeInsets.symmetric(vertical: 12),
                         ),
                       ),
                     )
-                    ,
+                  : const Text(
+                      "Shivdhara Residency",
+                      style: TextStyle(color: Colors.white),
+                    );
+            },
+          ),
+          centerTitle: true,
+          elevation: 3,
+        ),
+        body: kIsWeb
+            ? Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+
+                        countRow(
+                            icon: Icons.two_wheeler_outlined,
+                            count: totalBike.toString(),
+                            title: "bike"), countRow(
+                            icon: Icons.directions_car, count: totalCar.toString(), title: "car"),
+                      ],
+                    ),
                     const Divider(
-                      thickness: 2,
+                      thickness: 1,
                       color: Colors.grey,
                     ),
                     Expanded(
@@ -180,10 +224,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           itemCount: foundData.length,
                           itemBuilder: (context, index) {
                             return Card(
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape:
+                                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               elevation: 3,
                               child: Theme(
-                                data:Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
                                 child: ExpansionTile(
                                   leading: Stack(
                                     children: [
@@ -205,7 +250,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                           foundData[index].ownerName!;
                                                       editContactController.text =
                                                           foundData[index].contactNo!;
-                                
+
                                                       _editData(context, index);
                                                     },
                                                     child: Container(
@@ -213,7 +258,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                                         width: 18,
                                                         decoration: BoxDecoration(
                                                             color: Colors.cyan,
-                                                            borderRadius: BorderRadius.circular(20)),
+                                                            borderRadius:
+                                                                BorderRadius.circular(20)),
                                                         child: const Icon(
                                                           Icons.edit,
                                                           size: 13,
@@ -285,8 +331,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               )
-
-      : Column(
+            : Column(
                 children: [
                   TextField(
                     controller: textEditingController,
@@ -404,6 +449,37 @@ class _HomeScreenState extends State<HomeScreen> {
                   )),
                 ],
               ));
+  }
+
+  Row countRow({required IconData icon, required String title, required String count}) {
+    return Row(
+      children: [
+        Container(
+          height: 35,
+          width: 35,
+          decoration: BoxDecoration(color: Colors.cyan, borderRadius: BorderRadius.circular(20)),
+          child: Icon(
+            icon,
+            color: Colors.white,
+            size: 21,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Column(
+          children: [
+            Text(
+              count,
+              style: const TextStyle(color: Colors.cyan, fontWeight: FontWeight.w700),
+            ),
+            Text(
+              title.toUpperCase(),
+              style:
+                  const TextStyle(fontSize: 8.5, color: Colors.cyan, fontWeight: FontWeight.w400),
+            ),
+          ],
+        )
+      ],
+    );
   }
 
   List<String> bikeNumber = [];

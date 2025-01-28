@@ -1,7 +1,7 @@
 import 'package:society_parking/constant.dart';
+import 'package:society_parking/models/user_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../models/user_model.dart';
 
 class UserController {
   List<UserData> userlist = [];
